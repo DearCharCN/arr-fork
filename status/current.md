@@ -4,7 +4,7 @@ Last Updated: 2026-07-03
 
 ## Active Requirement
 
-None.
+Initial requirements recorded; no single requirement has been selected for implementation yet.
 
 ## Current Goal
 
@@ -17,7 +17,7 @@ Prepare the workspace structure for AI-assisted cross-repository development.
 - [x] Create `repos.json`.
 - [x] Create workspace setup and status scripts.
 - [x] Create AI navigation and planning structure.
-- [ ] Add first real requirement.
+- [x] Add first real requirement.
 - [ ] Document debug, test, and release after running them with the user.
 - [x] Document Radarr build after a real local run.
 - [x] Add a project skill for repeating the Radarr build workflow.
@@ -51,14 +51,14 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 
 ## Next Steps
 
-- Add the first requirement to `planning/requirements.md`.
+- Select the first requirement to explore or implement.
 - Explore relevant code paths once a requirement is selected.
 - Run and document Sonarr build later with the user.
 - Run and document debug, test, and release steps later with the user.
 
 ## Blockers
 
-- No active feature requirement has been selected yet.
+- Multiple draft requirements exist, but no single feature requirement has been selected for implementation yet.
 
 ## Notes For Next AI Session
 

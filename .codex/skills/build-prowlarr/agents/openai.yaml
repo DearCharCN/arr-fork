@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Prowlarr"
+  short_description: "Build Prowlarr installer locally."
+  default_prompt: "Build Prowlarr from this workspace using the verified local workflow."

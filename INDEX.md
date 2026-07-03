@@ -34,6 +34,7 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `guides/repo-map.md` | User + AI | Repository roles and stable code locations |
 | `repos.json` | User + AI | Repo paths, remotes, branches, and roles |
 | `scripts/` | User + AI | Workspace helper scripts |
+| `.codex/skills/build-prowlarr/` | AI | Verified Prowlarr local build and installer workflow |
 | `.codex/skills/build-radarr/` | AI | Verified Radarr local build workflow |
 
 ## Source Repositories
@@ -45,6 +46,10 @@ This is the entry point for understanding the `arr-fork` workspace.
 These folders are ignored by the workspace root Git repository and keep their own Git histories.
 
 ## Project Skills
+
+- `.codex/skills/build-prowlarr/SKILL.md`
+  - Use when asked to compile, package, or build a Windows installer for Prowlarr locally.
+  - Captures the verified NuGet v2 restore workaround, Windows build, frontend build, and Inno installer generation.
 
 - `.codex/skills/build-radarr/SKILL.md`
   - Use when asked to compile or build Radarr locally.

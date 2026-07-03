@@ -21,14 +21,17 @@ Prepare the workspace structure for AI-assisted cross-repository development.
 - [ ] Document debug, test, and release after running them with the user.
 - [x] Document Radarr build after a real local run.
 - [x] Add a project skill for repeating the Radarr build workflow.
+- [x] Add a project skill for repeating the Prowlarr build and installer workflow.
 
 ## Repository Status
 
 ### Prowlarr
 
-Branch: develop
-Changes: Not checked in this status file.
-Tests: Not run.
+Branch: my-feature, created from latest tag `v2.5.0.5422`.
+Changes: Only generated installer output under `distribution/windows/setup/output/`.
+Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer.
+Installer: Produced `Prowlarr.2.5.0.5422.win-x64.exe` under `Prowlarr/distribution/windows/setup/output/`.
+Tests: Not run; build generated test publish outputs but did not execute tests.
 
 ### Sonarr
 
@@ -48,7 +51,7 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 
 - Add the first requirement to `planning/requirements.md`.
 - Explore relevant code paths once a requirement is selected.
-- Run and document Prowlarr/Sonarr builds later with the user.
+- Run and document Sonarr build later with the user.
 - Run and document debug, test, and release steps later with the user.
 
 ## Blockers
@@ -64,3 +67,9 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 - Confirmed Radarr frontend build command from `Radarr/`: `corepack yarn install --frozen-lockfile --network-timeout 120000`, then `corepack yarn run build --env production`.
 - Confirmed Radarr installer generation with Inno Setup `6.7.1`; PowerShell invocation needs `/DFramework=net8.0` and `/DRuntime=win-x64`.
 - Project skill `.codex/skills/build-radarr/SKILL.md` records the repeatable Radarr build and installer workflow plus Corepack/package.json pitfall.
+- Confirmed Prowlarr latest tag on 2026-07-03: `v2.5.0.5422`; created `my-feature` from that tag.
+- Confirmed Prowlarr backend build command from `Prowlarr/`: `dotnet clean src/Prowlarr.sln -c Debug`; `dotnet clean src/Prowlarr.sln -c Release`; then `dotnet msbuild -restore src/Prowlarr.sln -p:RestoreSources=https://www.nuget.org/api/v2/ -p:NuGetAudit=false -p:SelfContained=True -p:Configuration=Release -p:Platform=Windows -p:RuntimeIdentifiers=win-x64 -p:AssemblyVersion=2.5.0.5422 -p:AssemblyConfiguration=my-feature -t:PublishAllRids`.
+- Prowlarr build note: `https://api.nuget.org/v3/index.json` failed locally with TLS principal mismatch; official v2 source `https://www.nuget.org/api/v2/` worked.
+- Confirmed Prowlarr frontend build command from `Prowlarr/`: `corepack yarn install --frozen-lockfile --network-timeout 120000`, then `corepack yarn run build --env production`, with `COREPACK_ENABLE_AUTO_PIN=0`.
+- Confirmed Prowlarr installer generation with Inno Setup `6.7.1`; PowerShell invocation uses `/DFramework=net8.0` and `/DRuntime=win-x64`, with `MAJORVERSION=2.5.0`, `MINORVERSION=5422`, and `PROWLARRVERSION=2.5.0.5422`.
+- Project skill `.codex/skills/build-prowlarr/SKILL.md` records the repeatable Prowlarr build, NuGet v2 restore workaround, and installer workflow. It intentionally does not include branch creation as a required build step.

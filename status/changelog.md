@@ -13,3 +13,5 @@ Record AI-assisted workspace and implementation changes here in chronological or
 - Ran and documented a real Radarr local build: installed .NET SDK 8.0.421, activated Yarn 1.22.19 through Corepack, built backend for `win-x64`, and built the frontend production UI.
 - Added project skill `.codex/skills/build-radarr/` so future Radarr build requests can follow the verified workflow directly.
 - Ran and documented Radarr Windows installer generation, producing `Radarr.6.2.2.0.win-x64.exe` with Inno Setup 6.7.1.
+- Created Prowlarr `my-feature` from latest tag `v2.5.0.5422`, built backend and frontend, and produced `Prowlarr.2.5.0.5422.win-x64.exe` with Inno Setup 6.7.1.
+- Added project skill `.codex/skills/build-prowlarr/` so future Prowlarr build and installer requests can follow the verified workflow directly.

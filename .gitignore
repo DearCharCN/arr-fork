@@ -1,6 +1,7 @@
 /Prowlarr/
 /Radarr/
 /Sonarr/
+/.dotnet/
 
 tmp/
 logs/

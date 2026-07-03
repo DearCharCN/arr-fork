@@ -11,3 +11,4 @@ Do not record routine AI activity, command runs, setup steps, or status checks h
 - Added M-Team API access documentation and the `mteam-api` project skill for safe token-based real-environment probes across M-Team related work.
 - Updated R001 M-Team parsing against real API samples: full per-track media data was found in detail `mediainfo` text, and the parser now handles both MediaInfo track sections and BDInfo audio/subtitle tables.
 - Updated R001 M-Team enrichment strategy: when search results do not include parseable track metadata, Prowlarr now fetches `POST /api/torrent/mediaInfo?id=<torrent id>` and parses the returned MediaInfo text for audio languages, subtitle languages, and per-language audio specifications.
+- Refined R001 search-result media display: Prowlarr now shows compact multi-audio and multi-subtitle labels in desktop/mobile search results, exposes full media details in popovers, and preserves Atmos in parsed audio specifications.

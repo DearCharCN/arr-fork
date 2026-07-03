@@ -32,10 +32,10 @@ Implement and validate the Prowlarr side of R001, then confirm the exact M-Team 
 ### Prowlarr
 
 Branch: my-feature, created from latest tag `v2.5.0.5422`.
-Changes: R001 source changes in M-Team parsing, release/search models, Newznab output, search UI columns, localization, and M-Team parser fixtures; M-Team parser now handles real `mediainfo` text and fetches `/api/torrent/mediaInfo` by torrent id when search results lack parseable track metadata; generated installer output remains under `distribution/windows/setup/output/`.
-Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer; backend production build was re-run after the real `mediainfo` parser update and again after wiring `/api/torrent/mediaInfo`.
+Changes: R001 source changes in M-Team parsing, release/search models, Newznab output, search UI columns, localization, and M-Team parser fixtures; M-Team parser now handles real `mediainfo` text, fetches `/api/torrent/mediaInfo` by torrent id when search results lack parseable track metadata, preserves Atmos in audio specifications, and displays compact multi-audio/multi-subtitle labels with popover details in desktop/mobile search results; generated installer output remains under `distribution/windows/setup/output/`.
+Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer; backend `win-x64` publish and frontend production webpack were re-run after the compact media-display and Atmos parser update and passed. The latest user-requested compile intentionally skipped installer generation.
 Installer: Produced `Prowlarr.2.5.0.5422.win-x64.exe` under `Prowlarr/distribution/windows/setup/output/`.
-Tests: Not run; build generated and compiled test publish outputs, including the new M-Team parser fixture, but did not execute tests.
+Tests: Not run; latest backend publish compiled test assemblies, including the Atmos parser fixture, but did not execute the test suite.
 
 ### Sonarr
 
@@ -78,6 +78,7 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 - Confirmed Prowlarr latest tag on 2026-07-03: `v2.5.0.5422`; created `my-feature` from that tag.
 - Confirmed Prowlarr backend build command from `Prowlarr/`: `dotnet clean src/Prowlarr.sln -c Debug`; `dotnet clean src/Prowlarr.sln -c Release`; then `dotnet msbuild -restore src/Prowlarr.sln -p:RestoreSources=https://www.nuget.org/api/v2/ -p:NuGetAudit=false -p:SelfContained=True -p:Configuration=Release -p:Platform=Windows -p:RuntimeIdentifiers=win-x64 -p:AssemblyVersion=2.5.0.5422 -p:AssemblyConfiguration=my-feature -t:PublishAllRids`.
 - Prowlarr build note: `https://api.nuget.org/v3/index.json` failed locally with TLS principal mismatch; official v2 source `https://www.nuget.org/api/v2/` worked.
+- Prowlarr SDK note: when system .NET SDK `8.0.421` was unavailable, installed the official SDK into workspace-local `F:\arr-fork\.dotnet` and used `F:\arr-fork\.dotnet\dotnet.exe` for backend compilation; `.dotnet/` is ignored by the workspace root Git repository.
 - Confirmed Prowlarr frontend build command from `Prowlarr/`: `corepack yarn install --frozen-lockfile --network-timeout 120000`, then `corepack yarn run build --env production`, with `COREPACK_ENABLE_AUTO_PIN=0`.
 - Confirmed Prowlarr installer generation with Inno Setup `6.7.1`; PowerShell invocation uses `/DFramework=net8.0` and `/DRuntime=win-x64`, with `MAJORVERSION=2.5.0`, `MINORVERSION=5422`, and `PROWLARRVERSION=2.5.0.5422`.
 - Project skill `.codex/skills/build-prowlarr/SKILL.md` records the repeatable Prowlarr build, NuGet v2 restore workaround, and installer workflow. It intentionally does not include branch creation as a required build step.

@@ -4,11 +4,11 @@ Last Updated: 2026-07-03
 
 ## Active Requirement
 
-Initial requirements recorded; no single requirement has been selected for implementation yet.
+R001 - Prowlarr M-Team 搜索结果增强媒体语言信息.
 
 ## Current Goal
 
-Prepare the workspace structure for AI-assisted cross-repository development.
+Implement and validate the Prowlarr side of R001, then confirm the exact M-Team API media-info shape with a real response.
 
 ## Progress
 
@@ -22,16 +22,20 @@ Prepare the workspace structure for AI-assisted cross-repository development.
 - [x] Document Radarr build after a real local run.
 - [x] Add a project skill for repeating the Radarr build workflow.
 - [x] Add a project skill for repeating the Prowlarr build and installer workflow.
+- [x] Implement initial Prowlarr R001 support for M-Team audio languages, subtitle languages, and per-language audio specifications.
+- [x] Document M-Team API access notes and add `.codex/skills/mteam-api/` for safe real-environment probes.
+- [x] Validate M-Team search/detail media field shape against real API responses and adjust parser mapping for the observed `mediainfo` field.
+- [x] Decide and implement the R001 media-info fetch strategy, because `/api/torrent/search` does not include full per-track audio/subtitle metadata and `/api/torrent/mediaInfo` can return the needed text directly.
 
 ## Repository Status
 
 ### Prowlarr
 
 Branch: my-feature, created from latest tag `v2.5.0.5422`.
-Changes: Only generated installer output under `distribution/windows/setup/output/`.
-Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer.
+Changes: R001 source changes in M-Team parsing, release/search models, Newznab output, search UI columns, localization, and M-Team parser fixtures; M-Team parser now handles real `mediainfo` text and fetches `/api/torrent/mediaInfo` by torrent id when search results lack parseable track metadata; generated installer output remains under `distribution/windows/setup/output/`.
+Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer; backend production build was re-run after the real `mediainfo` parser update and again after wiring `/api/torrent/mediaInfo`.
 Installer: Produced `Prowlarr.2.5.0.5422.win-x64.exe` under `Prowlarr/distribution/windows/setup/output/`.
-Tests: Not run; build generated test publish outputs but did not execute tests.
+Tests: Not run; build generated and compiled test publish outputs, including the new M-Team parser fixture, but did not execute tests.
 
 ### Sonarr
 
@@ -51,14 +55,16 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 
 ## Next Steps
 
-- Select the first requirement to explore or implement.
-- Explore relevant code paths once a requirement is selected.
+- Decide whether R001 should add downstream Sonarr/Radarr parsing for the new `audio` Torznab attribute before starting R002.
+- Validate the `/api/torrent/mediaInfo` enrichment path in a running Prowlarr instance against real M-Team search results.
 - Run and document Sonarr build later with the user.
 - Run and document debug, test, and release steps later with the user.
 
 ## Blockers
 
-- Multiple draft requirements exist, but no single feature requirement has been selected for implementation yet.
+- Real M-Team `/api/torrent/search` responses only exposed summary fields such as `audioCodec`, `videoCodec`, and `hasChineseSubtitle`; full per-track audio/subtitle data was observed under `/api/torrent/detail` as `mediainfo` and under `/api/torrent/mediaInfo` as direct `data` text.
+- `/api/torrent/mediaInfo` has no published separate quota; the parser skips remaining mediaInfo enrichment after a 429 response, but real search latency and quota behavior still need running-instance validation.
+- Test execution commands are still undocumented; only build verification has been run.
 
 ## Notes For Next AI Session
 

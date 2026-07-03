@@ -1,0 +1,5 @@
+interface:
+  display_name: "M-Team API"
+  short_description: "Probe M-Team API responses safely"
+  default_prompt: "Use $mteam-api to validate M-Team API responses for real-data testing."
+

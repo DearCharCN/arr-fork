@@ -5,6 +5,9 @@
 tmp/
 logs/
 *.log
+.env
+*.env.local
+.codex/secrets/
 
 .vs/
 .vscode/

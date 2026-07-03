@@ -41,6 +41,7 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `.codex/skills/build-prowlarr/` | AI | Verified Prowlarr local build and installer workflow |
 | `.codex/skills/build-radarr/` | AI | Verified Radarr local build workflow |
 | `.codex/skills/build-sonarr/` | AI | Verified Sonarr local build and installer workflow |
+| `.codex/skills/mteam-api/` | AI | Safe M-Team API probing workflow for M-Team real-environment validation |
 
 ## Source Repositories
 
@@ -63,3 +64,7 @@ These folders are ignored by the workspace root Git repository and keep their ow
 - `.codex/skills/build-sonarr/SKILL.md`
   - Use when asked to compile, package, or build a Windows installer for Sonarr locally.
   - Captures the verified .NET 6 SDK setup, Windows build, frontend build, package folder, and bundled Inno installer generation.
+
+- `.codex/skills/mteam-api/SKILL.md`
+  - Use when asked to validate M-Team API access or inspect real M-Team search/detail response fields.
+  - Captures token handling, `x-api-key` access, tiny probe commands, response sanitization, and reusable real-data discovery workflow.

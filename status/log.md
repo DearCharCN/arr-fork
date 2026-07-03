@@ -23,3 +23,22 @@ Project, requirement, and user-visible feature changes belong in `status/changel
 - Fetched Sonarr upstream tags and created local `my-feature` from latest tag `v4.0.19.2979`.
 - Installed .NET SDK 6.0.428 for Sonarr, built Sonarr backend for `win-x64`, built frontend production UI, prepared the Windows installer input folder, and produced `Sonarr.my-feature.4.0.19.2979.win-x64-installer.exe` with the bundled Inno Setup 5 compiler.
 - Added project skill `.codex/skills/build-sonarr/` so future Sonarr build and installer requests can follow the verified workflow directly.
+- Began R001 implementation, choosing Prowlarr first because M-Team media metadata is the upstream field source for later Sonarr/Radarr sorting work.
+- Implemented initial Prowlarr R001 support: parsed flexible M-Team audio/subtitle media fields, added structured release audio info, exposed audio/subtitle metadata through the search API and Newznab/Torznab output, and added search UI columns.
+- Added a M-Team parser fixture covering English TrueHD and Chinese DDP 5.1 audio specs plus subtitle languages; the fixture was compiled by the backend build but not executed.
+- Re-ran the documented Prowlarr backend publish build for `win-x64`; it passed with the known non-fatal Sentry API warning.
+- Re-ran the documented Prowlarr frontend production webpack build; the first run generated missing CSS module typings and failed on those typings, then the second run passed.
+- Read M-Team API wiki at `https://wiki.m-team.cc/zh-tw/api`; documented token-based `x-api-key` access, Swagger caveats, disallowed prefixes, and published rate limits without storing the raw token.
+- Added `guides/mteam-api.md` and `.codex/skills/mteam-api/` with a PowerShell probe script for sanitized M-Team profile/search/detail/download-token requests.
+- Validated the `mteam-api` skill with `quick_validate.py` and checked the PowerShell probe script with the PowerShell parser; no live M-Team API request was run.
+- Generalized the `mteam-api` skill wording so it applies to all M-Team related development and real-data testing, not only one requirement.
+- Ran live M-Team API probes with sanitized output under `tmp/`: profile plus search samples for `Interstellar`, `Inception`, and `Dune`.
+- Observed that real `/api/torrent/search` responses do not contain structured `mediaInfo.audio` or `mediaInfo.subtitles`; search results expose summary fields including `audioCodec`, `videoCodec`, and `hasChineseSubtitle`.
+- Ran live `/api/torrent/detail` probes for selected search result ids and confirmed full per-track audio/subtitle data appears in the detail `mediainfo` text field, using BDInfo `AUDIO`/`SUBTITLES` tables or MediaInfo `Audio #`/`Text #` sections.
+- Fixed a strict-mode endpoint-string bug in `.codex/skills/mteam-api/scripts/Invoke-MTeamApiProbe.ps1` that affected detail/download-token output labeling.
+- Updated the M-Team parser and fixture to parse real `mediainfo` text shapes, then re-ran the documented Prowlarr backend publish build for `win-x64`; it passed with the known non-fatal Sentry API warning.
+- Explored production frontend static JS for alternate M-Team media endpoints; found related endpoints including `/torrent/files`, `/subtitle/list`, `/subtitle/search`, `/torrent/audioCodecList`, `/tracker/queryHistory`, and alternate API host `api.m-team.io`.
+- Probed alternate M-Team endpoints with sanitized captures under `tmp/mteam-alt-api/`; none returned the per-track audio/subtitle metadata available in `/torrent/detail`'s `mediainfo`.
+- Confirmed after user pointed it out that `/api/torrent/mediaInfo` returns the MediaInfo text directly for one torrent via `POST ?id=<torrent id>` or form body `id=<torrent id>`; no rate/quota headers were visible, and the official wiki does not publish a separate quota for this endpoint.
+- Changed the R001 M-Team parser to fetch `/api/torrent/mediaInfo` by torrent id when search results lack parseable track metadata, added a parser fixture for that fallback path, and recorded the strategy in `planning/decisions.md`.
+- Re-ran the documented Prowlarr backend publish build for `win-x64`; it passed with the known non-fatal Sentry API warning. Test assemblies compiled, but the test suite was not executed because test commands are not yet documented for this workspace.

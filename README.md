@@ -14,13 +14,28 @@ The workspace root is used for planning, AI context, status tracking, and helper
 
 ```text
 arr-fork/
+  AGENTS.md
+  INDEX.md
   README.md
   .gitignore
   repos.json
 
+  planning/
+    requirements.md
+    ideas.md
+    decisions.md
+
+  status/
+    current.md
+    changelog.md
+
+  guides/
+    repo-map.md
+
   scripts/
     setup.ps1
     status.ps1
+    sync.ps1
 
   Prowlarr/   # independent Git repository
   Sonarr/     # independent Git repository
@@ -34,29 +49,17 @@ arr-fork/
 - Do not commit the nested repository folders into the workspace root repository.
 - Report Git status separately for each touched repository.
 
-## Next Structure To Add
+## AI Context
 
-```text
-arr-fork/
-  AGENTS.md
-  INDEX.md
+Start with:
 
-  planning/
-    requirements.md
-    ideas.md
-    decisions.md
+- `AGENTS.md`
+- `INDEX.md`
+- `planning/requirements.md`
+- `status/current.md`
+- `guides/repo-map.md`
 
-  status/
-    current.md
-    changelog.md
-
-  guides/
-    repo-map.md
-    build-debug-release.md
-
-  scripts/
-    sync.ps1
-```
+Build, debug, test, and release instructions are intentionally not documented yet. They should be added only after running through the real local workflow with the user.
 
 ## Setup On Another Machine
 
@@ -77,3 +80,13 @@ Run:
 ```
 
 This prints the current branch and short Git status for each source repository.
+
+## Sync Repository Remotes
+
+Run:
+
+```powershell
+.\scripts\sync.ps1
+```
+
+This fetches all remotes for each source repository without changing branches or working tree files.

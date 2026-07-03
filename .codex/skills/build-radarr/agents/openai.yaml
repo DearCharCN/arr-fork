@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Radarr"
+  short_description: "Build Radarr locally without repeating known setup mistakes."
+  default_prompt: "Build Radarr from this workspace using the verified local workflow."

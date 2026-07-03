@@ -34,6 +34,7 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `guides/repo-map.md` | User + AI | Repository roles and stable code locations |
 | `repos.json` | User + AI | Repo paths, remotes, branches, and roles |
 | `scripts/` | User + AI | Workspace helper scripts |
+| `.codex/skills/build-radarr/` | AI | Verified Radarr local build workflow |
 
 ## Source Repositories
 
@@ -42,3 +43,9 @@ This is the entry point for understanding the `arr-fork` workspace.
 - `Radarr/`
 
 These folders are ignored by the workspace root Git repository and keep their own Git histories.
+
+## Project Skills
+
+- `.codex/skills/build-radarr/SKILL.md`
+  - Use when asked to compile or build Radarr locally.
+  - Captures the verified Windows workflow and known pitfalls from the first successful run.

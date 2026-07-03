@@ -1,0 +1,16 @@
+/Prowlarr/
+/Radarr/
+/Sonarr/
+
+tmp/
+logs/
+*.log
+
+.vs/
+.vscode/
+.idea/
+
+*.user
+*.suo
+*.swp
+*.tmp

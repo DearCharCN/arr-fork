@@ -35,9 +35,11 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 
 ### Sonarr
 
-Branch: v5-develop
-Changes: Not checked in this status file.
-Tests: Not run.
+Branch: my-feature, created from latest tag `v4.0.19.2979`.
+Changes: Generated build output under `_output/`, `_tests/`, `_artifacts/`, and frontend dependencies under `node_modules/`; workspace docs updated with verified Sonarr build workflow.
+Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer.
+Installer: Produced `Sonarr.my-feature.4.0.19.2979.win-x64-installer.exe` under `Sonarr/_artifacts/`.
+Tests: Not run; build generated test publish outputs but did not execute tests.
 
 ### Radarr
 
@@ -73,3 +75,9 @@ Tests: Not run; build generated test publish outputs but did not execute tests.
 - Confirmed Prowlarr frontend build command from `Prowlarr/`: `corepack yarn install --frozen-lockfile --network-timeout 120000`, then `corepack yarn run build --env production`, with `COREPACK_ENABLE_AUTO_PIN=0`.
 - Confirmed Prowlarr installer generation with Inno Setup `6.7.1`; PowerShell invocation uses `/DFramework=net8.0` and `/DRuntime=win-x64`, with `MAJORVERSION=2.5.0`, `MINORVERSION=5422`, and `PROWLARRVERSION=2.5.0.5422`.
 - Project skill `.codex/skills/build-prowlarr/SKILL.md` records the repeatable Prowlarr build, NuGet v2 restore workaround, and installer workflow. It intentionally does not include branch creation as a required build step.
+- Confirmed Sonarr latest tag on 2026-07-03 after fetching upstream tags: `v4.0.19.2979`; created `my-feature` from that tag.
+- Confirmed Sonarr local build prerequisites: .NET SDK `6.0.428` satisfies `global.json` version `6.0.405`, Node `v22.12.0`, and Yarn through Corepack.
+- Confirmed Sonarr backend build command from `Sonarr/`: `dotnet clean src/Sonarr.sln -c Debug`; `dotnet clean src/Sonarr.sln -c Release`; then `dotnet msbuild -restore src/Sonarr.sln -p:Configuration=Release -p:Platform=Windows -p:RuntimeIdentifiers=win-x64 -p:AssemblyVersion=4.0.19.2979 -p:AssemblyConfiguration=my-feature -t:PublishAllRids`.
+- Confirmed Sonarr frontend build command from `Sonarr/`: `corepack yarn install --frozen-lockfile --network-timeout 120000`, then `corepack yarn run build --env production`, with `COREPACK_ENABLE_AUTO_PIN=0`.
+- Confirmed Sonarr installer generation with bundled Inno Setup 5 under `Sonarr/distribution/windows/setup/inno/ISCC.exe`; installer input must be prepared at `_output/win-x64/net6.0/Sonarr`, and environment variables were `SONARR_MAJOR_VERSION=4.0.19`, `SONARR_VERSION=4.0.19.2979`, `BRANCH=my-feature`, `FRAMEWORK=net6.0`, and `RUNTIME=win-x64`.
+- Project skill `.codex/skills/build-sonarr/SKILL.md` records the repeatable Sonarr build and installer workflow plus Corepack/package.json pitfall.

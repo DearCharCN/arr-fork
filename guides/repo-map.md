@@ -52,5 +52,5 @@ Known solution file:
 
 - The three repositories share similar `src/`, `frontend/`, `schemas/`, and `distribution/` layouts.
 - Prowlarr and Radarr include root-level `build.sh`, `docs.sh`, and `test.sh`.
-- Sonarr stores similar shell scripts under `Sonarr/scripts/`.
-- Build, debug, test, and release instructions are intentionally not documented yet.
+- Sonarr includes root-level `build.sh`, `docs.sh`, and `test.sh`.
+- Local build workflows are documented in project skills after verified runs. Debug, test, and release instructions are intentionally not documented yet.

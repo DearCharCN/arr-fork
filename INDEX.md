@@ -40,6 +40,7 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `scripts/` | User + AI | Workspace helper scripts |
 | `.codex/skills/build-prowlarr/` | AI | Verified Prowlarr local build and installer workflow |
 | `.codex/skills/build-radarr/` | AI | Verified Radarr local build workflow |
+| `.codex/skills/build-sonarr/` | AI | Verified Sonarr local build and installer workflow |
 
 ## Source Repositories
 
@@ -58,3 +59,7 @@ These folders are ignored by the workspace root Git repository and keep their ow
 - `.codex/skills/build-radarr/SKILL.md`
   - Use when asked to compile or build Radarr locally.
   - Captures the verified Windows workflow and known pitfalls from the first successful run.
+
+- `.codex/skills/build-sonarr/SKILL.md`
+  - Use when asked to compile, package, or build a Windows installer for Sonarr locally.
+  - Captures the verified .NET 6 SDK setup, Windows build, frontend build, package folder, and bundled Inno installer generation.

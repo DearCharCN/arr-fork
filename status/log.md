@@ -20,3 +20,6 @@ Project, requirement, and user-visible feature changes belong in `status/changel
 - Initialized this local workspace by running `scripts/setup.ps1`; cloned Prowlarr, Sonarr, and Radarr, and configured each upstream remote.
 - Reclassified `status/changelog.md` as a project requirement and feature changelog; moved previous AI activity entries into this log file.
 - Corrected initialization mistakes: restored `status/current.md` as the target state file, switched Prowlarr to local `my-feature` from tag `v2.5.0.5422`, switched Radarr to `my-feature` tracking `origin/my-feature`, and updated AI guidance so future initialization follows `current` without modifying it.
+- Fetched Sonarr upstream tags and created local `my-feature` from latest tag `v4.0.19.2979`.
+- Installed .NET SDK 6.0.428 for Sonarr, built Sonarr backend for `win-x64`, built frontend production UI, prepared the Windows installer input folder, and produced `Sonarr.my-feature.4.0.19.2979.win-x64-installer.exe` with the bundled Inno Setup 5 compiler.
+- Added project skill `.codex/skills/build-sonarr/` so future Sonarr build and installer requests can follow the verified workflow directly.

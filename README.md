@@ -27,6 +27,7 @@ arr-fork/
 
   status/
     current.md
+    log.md
     changelog.md
 
   guides/
@@ -57,6 +58,7 @@ Start with:
 - `INDEX.md`
 - `planning/requirements.md`
 - `status/current.md`
+- `status/log.md`
 - `guides/repo-map.md`
 
 Build, debug, test, and release instructions are intentionally not documented yet. They should be added only after running through the real local workflow with the user.

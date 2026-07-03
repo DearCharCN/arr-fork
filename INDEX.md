@@ -13,13 +13,16 @@ This is the entry point for understanding the `arr-fork` workspace.
 3. `status/current.md`
    - AI-maintained current progress and next steps.
 
-4. `planning/decisions.md`
+4. `status/log.md`
+   - Chronological AI activity and command notes.
+
+5. `planning/decisions.md`
    - Decisions that should not be repeatedly reopened.
 
-5. `guides/repo-map.md`
+6. `guides/repo-map.md`
    - Stable repository roles and important paths.
 
-6. `repos.json`
+7. `repos.json`
    - Machine-readable repository list.
 
 ## Main Areas
@@ -30,7 +33,8 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `planning/ideas.md` | User | Raw ideas and future possibilities |
 | `planning/decisions.md` | User + AI | Accepted decisions and rationale |
 | `status/current.md` | AI | Current implementation state |
-| `status/changelog.md` | AI | Chronological AI work log |
+| `status/log.md` | AI | Chronological AI activity log |
+| `status/changelog.md` | AI | Project requirement and feature change log |
 | `guides/repo-map.md` | User + AI | Repository roles and stable code locations |
 | `repos.json` | User + AI | Repo paths, remotes, branches, and roles |
 | `scripts/` | User + AI | Workspace helper scripts |

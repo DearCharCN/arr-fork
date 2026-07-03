@@ -1,0 +1,28 @@
+{
+  "repositories": [
+    {
+      "name": "Prowlarr",
+      "path": "Prowlarr",
+      "url": "https://github.com/DearCharCN/Prowlarr.git",
+      "upstream": "https://github.com/Prowlarr/Prowlarr.git",
+      "defaultBranch": "v5-develop",
+      "role": "Indexer manager and search integration"
+    },
+    {
+      "name": "Sonarr",
+      "path": "Sonarr",
+      "url": "https://github.com/DearCharCN/Sonarr.git",
+      "upstream": "https://github.com/Sonarr/Sonarr.git",
+      "defaultBranch": "develop",
+      "role": "TV library and download automation"
+    },
+    {
+      "name": "Radarr",
+      "path": "Radarr",
+      "url": "https://github.com/DearCharCN/Radarr.git",
+      "upstream": "https://github.com/Radarr/Radarr.git",
+      "defaultBranch": "develop",
+      "role": "Movie library and download automation"
+    }
+  ]
+}

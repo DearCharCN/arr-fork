@@ -11,7 +11,7 @@ Priority: High
 
 ### Goal
 
-调整 Prowlarr 的 M-Team 搜索器，让它调用 M-Team API 获取更完整的媒体信息，并在返回的搜索结果中显示影片的多语言音轨、字幕语言，以及每种语言音轨对应的规格。
+调整 Prowlarr 的 M-Team 搜索器，让它调用 M-Team API 获取更完整的媒体信息，并在返回的搜索结果中显示影片的多语言音轨、字幕语言，以及每种语言音轨对应的规格。Radarr 也需要接收 Prowlarr 返回的这些 R001 字段和附加数据搜索状态，并在交互式搜索与自动追踪决策中正确使用。
 
 ### User Story
 
@@ -24,12 +24,16 @@ Priority: High
 - 当不同语言音轨规格不同时，搜索结果可以分别展示每种语言的音轨规格。
 - 示例：English: TrueHD；Chinese: DDP 5.1。
 - 这些信息后续应尽量能被 Sonarr/Radarr 的匹配和排序逻辑使用。
+- Radarr 接收 Prowlarr Torznab/Newznab 搜索结果时，需要保留音轨、字幕、每行附加数据搜索状态，以及整组附加数据搜索进度。
+- Radarr 交互式搜索不应阻塞首批结果显示；当附加数据尚未返回时，对应行显示 loading，并显示类似“正在等待 3/11”的整组完成状态。
+- 单行附加数据返回时，只更新该行，不触发整个搜索结果表格刷新，不自动改变当前排序结果；用户需要手动刷新或重新排序才改变排序视图。
+- Radarr 自动追踪在使用这些附加字段判断候选 release 前，需要等待当前整组搜索结果的附加数据都完成或明确结束，再继续后续优先级/拒绝原因判断。
 
 ### Repositories Involved
 
 - Prowlarr: 主要修改 M-Team indexer/API 解析和搜索结果字段。
 - Sonarr: 暂不确定，取决于 Prowlarr 是否能同步这些字段。
-- Radarr: 暂不确定，取决于 Prowlarr 是否能同步这些字段。
+- Radarr: 需要消费 Prowlarr 同步的音轨、字幕、附加数据搜索状态和进度字段，并把这些字段接入交互式搜索显示、排序稳定性和自动追踪等待逻辑。
 
 ### Acceptance Criteria
 
@@ -37,6 +41,9 @@ Priority: High
 - M-Team 搜索结果中能看到字幕语言列表。
 - 每个音轨语言能关联自己的规格，而不是只显示一个全局音频规格。
 - 至少能覆盖 English TrueHD、Chinese DDP 5.1 这类同片不同语言不同规格的情况。
+- Radarr `/api/v3/release` 能返回 Prowlarr 传来的音轨、字幕、每行附加数据状态和整组完成进度。
+- Radarr 交互式搜索能在附加数据未完成时显示行级 loading 和整组等待进度，单行完成时不重建整个结果列表、不自动改变当前排序结果。
+- Radarr 自动追踪在需要使用 R001 附加字段时，会等当前搜索结果整组附加数据完成后再进入候选 release 排序、匹配和拒绝判断。
 
 ### Notes
 

@@ -158,3 +158,46 @@ Priority: Medium
 ### Notes
 
 - 需要先探索 Sonarr 当前 season pack 支持范围，确认是缺少搜索入口、自动追踪策略，还是后续导入映射能力。
+
+## R005 - Custom Filter 支持 OR 条件组合
+
+Status: Draft
+Priority: High
+
+### Goal
+
+扩展 Prowlarr 的 Custom Filter 条件组合能力，让用户可以在同一个自定义过滤器里配置 OR 条件，而不是只能把多条条件按 AND 组合；同时检查 Sonarr 和 Radarr 是否也存在相同限制，如果存在或缺少对应能力，也同步补齐。
+
+### User Story
+
+作为 Prowlarr/Sonarr/Radarr 用户，我希望 Custom Filter 可以表达“满足条件 A 或条件 B”的筛选逻辑，这样在搜索结果、电影/剧集列表、日历、历史记录等支持自定义过滤的页面里，不需要创建多个过滤器或反复手动切换。
+
+### Expected Behavior
+
+- Custom Filter 可以继续保持当前默认 AND 行为，避免影响已有过滤器。
+- 用户可以在一个 Custom Filter 内选择条件组合方式，至少支持全部满足 AND 和任一满足 OR。
+- OR 组合应支持不同字段之间的条件，例如“音轨包含 Chinese 或字幕包含 Chinese”。
+- OR 组合应支持同一字段的多个条件，例如“Indexer 是 A 或 Indexer 是 B”。
+- 保存、读取、编辑、删除 Custom Filter 时，组合方式不会丢失。
+- 旧版本已保存的 Custom Filter 在升级后应自动按 AND 解释。
+- Prowlarr、Sonarr、Radarr 中已有 Custom Filter 的页面应尽量保持一致的交互和数据结构。
+
+### Repositories Involved
+
+- Prowlarr: 主要修改 Custom Filter 数据模型/API、Filter Builder UI、前端过滤执行逻辑，以及搜索结果等已支持 Custom Filter 的页面。
+- Sonarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有 AND 或缺少 OR，也同步增加。
+- Radarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有 AND 或缺少 OR，也同步增加。
+
+### Acceptance Criteria
+
+- Prowlarr 可以创建一个 OR Custom Filter，并正确显示满足任一条件的结果。
+- Prowlarr 已有 Custom Filter 不需要用户迁移，仍按 AND 生效。
+- Sonarr 和 Radarr 的 Custom Filter 能力被检查并记录结论。
+- 如果 Sonarr/Radarr 存在同样 AND-only 限制，也能创建和使用 OR Custom Filter。
+- API 资源、数据库存储、前端状态类型和过滤执行逻辑都能表达组合方式。
+- 至少覆盖一个跨字段 OR 示例和一个同字段多值 OR 示例。
+
+### Notes
+
+- 初步代码搜索显示三套项目都存在 Custom Filter API 和前端 Filter Builder；客户端过滤入口里有按条件逐个判定的 AND 形态，需要实现前进一步确认 server-side collection 过滤和 client-side collection 过滤是否都要改。
+- 设计时要避免破坏现有 Filter Builder 的简单使用体验；OR 可以先作为整个过滤器级别的组合方式，后续再考虑嵌套条件组。

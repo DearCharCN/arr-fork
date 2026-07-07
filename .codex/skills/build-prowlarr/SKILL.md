@@ -94,6 +94,46 @@ Successful frontend output includes:
 G:\arr-fork\Prowlarr\_output\UI\index.html
 ```
 
+## Local Run UI Copy
+
+When running `Prowlarr.Console.exe` or `Prowlarr.exe` directly from build output, copy the frontend output beside the executable first. The backend build leaves runnable executables in both non-publish and publish output folders; if `UI\login.html` is missing beside the executable, the web root returns a JSON 404.
+
+```powershell
+$root = (Resolve-Path -LiteralPath '.').Path
+$source = Join-Path $root '_output\UI'
+$destinations = @(
+  '_output\net8.0\win-x64\UI',
+  '_output\net8.0\win-x64\publish\UI',
+  '_output\net8.0-windows\win-x64\UI',
+  '_output\net8.0-windows\win-x64\publish\UI',
+  '_artifacts\win-x64\net8.0\Prowlarr\UI'
+)
+foreach ($relativeDest in $destinations) {
+  $dest = Join-Path $root $relativeDest
+  $destFull = [System.IO.Path]::GetFullPath($dest)
+  if (-not $destFull.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Refusing to copy outside repo: $destFull" }
+  Remove-Item -Recurse -Force -LiteralPath $destFull -ErrorAction SilentlyContinue
+  Copy-Item -Recurse -Force -LiteralPath $source -Destination $destFull
+}
+```
+
+Use this after backend and frontend builds, before opening `http://localhost:9696/` from any direct output-folder run. If skipped, Prowlarr can start successfully but return a JSON 404 for `/` or `/index.html`, with log warnings like:
+
+```text
+LoginHtmlMapper|File ...\_output\net8.0\win-x64\publish\UI\login.html not found
+```
+
+Verify the local web UI:
+
+```powershell
+Test-Path -LiteralPath _output\net8.0\win-x64\UI\login.html
+Test-Path -LiteralPath _output\net8.0\win-x64\publish\UI\login.html
+Test-Path -LiteralPath _output\net8.0-windows\win-x64\UI\login.html
+Test-Path -LiteralPath _output\net8.0-windows\win-x64\publish\UI\login.html
+Test-Path -LiteralPath _artifacts\win-x64\net8.0\Prowlarr\UI\login.html
+Invoke-WebRequest -Uri 'http://localhost:9696/' -UseBasicParsing -TimeoutSec 10
+```
+
 ## Windows Installer
 
 Use this only after backend and frontend outputs exist. `build.sh --packages --installer` is Bash-oriented; on this machine, mirror the script in PowerShell.
@@ -155,6 +195,11 @@ Verify outputs:
 Test-Path -LiteralPath _output/net8.0-windows/win-x64/publish/Prowlarr.exe
 Test-Path -LiteralPath _output/net8.0/win-x64/publish/Prowlarr.Console.exe
 Test-Path -LiteralPath _output/UI/index.html
+Test-Path -LiteralPath _output/net8.0/win-x64/UI/login.html
+Test-Path -LiteralPath _output/net8.0/win-x64/publish/UI/login.html
+Test-Path -LiteralPath _output/net8.0-windows/win-x64/UI/login.html
+Test-Path -LiteralPath _output/net8.0-windows/win-x64/publish/UI/login.html
+Test-Path -LiteralPath _artifacts/win-x64/net8.0/Prowlarr/UI/login.html
 Test-Path -LiteralPath distribution/windows/setup/output/Prowlarr.2.5.0.5422.win-x64.exe
 Get-FileHash -Algorithm SHA256 -LiteralPath distribution/windows/setup/output/Prowlarr.2.5.0.5422.win-x64.exe
 git status --short --branch

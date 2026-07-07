@@ -2,7 +2,7 @@
 
 Record chronological AI activity, command runs, setup steps, and status checks here when those details need to be preserved.
 
-Project, requirement, and user-visible feature changes belong in `status/changelog.md` instead.
+Implemented user-visible project and feature changes belong in `status/changelog.md` instead.
 
 ## 2026-07-03
 
@@ -18,7 +18,7 @@ Project, requirement, and user-visible feature changes belong in `status/changel
 - Created Prowlarr `my-feature` from latest tag `v2.5.0.5422`, built backend and frontend, and produced `Prowlarr.2.5.0.5422.win-x64.exe` with Inno Setup 6.7.1.
 - Added project skill `.codex/skills/build-prowlarr/` so future Prowlarr build and installer requests can follow the verified workflow directly.
 - Initialized this local workspace by running `scripts/setup.ps1`; cloned Prowlarr, Sonarr, and Radarr, and configured each upstream remote.
-- Reclassified `status/changelog.md` as a project requirement and feature changelog; moved previous AI activity entries into this log file.
+- Reclassified `status/changelog.md` as the implemented user-visible project and feature changelog; moved previous AI activity entries into this log file.
 - Corrected initialization mistakes: restored `status/current.md` as the target state file, switched Prowlarr to local `my-feature` from tag `v2.5.0.5422`, switched Radarr to `my-feature` tracking `origin/my-feature`, and updated AI guidance so future initialization follows `current` without modifying it.
 - Fetched Sonarr upstream tags and created local `my-feature` from latest tag `v4.0.19.2979`.
 - Installed .NET SDK 6.0.428 for Sonarr, built Sonarr backend for `win-x64`, built frontend production UI, prepared the Windows installer input folder, and produced `Sonarr.my-feature.4.0.19.2979.win-x64-installer.exe` with the bundled Inno Setup 5 compiler.
@@ -63,3 +63,17 @@ Project, requirement, and user-visible feature changes belong in `status/changel
 - Ran the documented Prowlarr frontend production webpack build with `corepack yarn run build --env production`; it passed after using elevated execution for Corepack's user-directory access. Removed Corepack's automatic `packageManager` side-effect from `package.json`.
 - Stopped the previously running compiled Prowlarr test process PID 109076, re-ran documented backend Debug/Release clean and `win-x64` publish with workspace-local .NET SDK `8.0.421`; publish passed with the known non-fatal Sentry warnings.
 - Restarted the compiled Prowlarr test build from `_output` with PID 106716 and confirmed `http://localhost:9696/login` returns HTTP 200.
+
+## 2026-07-07
+
+- Updated Prowlarr R001 search UI per user feedback: fixed audio/subtitle desktop table header alignment, made audio/subtitle columns manually sortable, kept pending or empty media-info rows last, and added footer progress/completion text for MediaInfo enrichment.
+- Verified localization JSON for English and Simplified Chinese with `ConvertFrom-Json`.
+- Ran Prowlarr frontend production webpack build with `COREPACK_ENABLE_AUTO_PIN=0; corepack yarn run build --env production`; it passed.
+- Ran `git diff --check` for Prowlarr; it passed with only CRLF normalization warnings.
+- Built a new Prowlarr Windows version from `Prowlarr/`: confirmed .NET SDK `8.0.421`, Yarn `1.22.19`, Node `v22.16.0`, and Inno Setup `6.7.1`; ran locked Yarn install, backend Debug/Release clean plus `win-x64` publish, frontend production webpack, package folder assembly, UI copy into publish output, and Inno installer generation.
+- Generated `Prowlarr.2.5.0.5422.win-x64.exe` at `Prowlarr/distribution/windows/setup/output/`; size `75066874` bytes, SHA256 `7C01598B0FC8E2E669D4AF83DFB4541DC9EB11FFFF7512017B862D02631CD1FD`.
+- Fixed the Prowlarr runnable-output workflow after the user hit a JSON 404 from `_output\net8.0\win-x64\Prowlarr.Console.exe`: copied `_output\UI` into non-publish and publish output folders plus `_artifacts\win-x64\net8.0\Prowlarr`, verified `http://localhost:9696/` returned `200 text/html`, and updated `.codex/skills/build-prowlarr/SKILL.md` so future local-run builds copy UI beside all runnable executables.
+- Added R001 Custom Filter support for Prowlarr search-result audio/subtitle fields and moved MediaInfo enrichment progress into backend release/search state; `/api/v1/search` and `/api/v1/search/mediaInfo` resources now carry `mediaInfoSearchId`, `mediaInfoProgressStatus`, `mediaInfoProgressCompleted`, and `mediaInfoProgressTotal`, and Torznab/Newznab output emits matching attrs when MediaInfo progress applies.
+- Re-verified Prowlarr with `git diff --check`, localization JSON parsing, frontend production webpack, backend Debug/Release clean plus `win-x64` publish, then copied UI output into all direct-run output folders.
+- Recompiled Prowlarr runnable output only, without generating a new installer: confirmed .NET/Yarn/Node prerequisites, ran locked Yarn install, backend Debug/Release clean plus `win-x64` publish, frontend production webpack, and copied `_output\UI` into all direct-run output folders.
+- Added R005 draft requirement for Custom Filter OR condition support. Initial code search confirmed Prowlarr, Sonarr, and Radarr all have Custom Filter API/frontend Filter Builder paths, and their client-side collection selectors currently show AND-style sequential predicate evaluation.

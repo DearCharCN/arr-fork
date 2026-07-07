@@ -1,12 +1,11 @@
 # Project Changelog
 
-Record user-visible project, requirement, and feature changes here.
+Record implemented user-visible project and feature changes here.
 
-Do not record routine AI activity, command runs, setup steps, or status checks here.
+Do not record draft requirements, planned work, routine AI activity, command runs, setup steps, or status checks here.
 
 ## 2026-07-03
 
-- Recorded initial draft requirements R001-R004 in `planning/requirements.md`: Prowlarr M-Team media language metadata, Sonarr/Radarr custom search-result sorting, per-quality-profile Custom Format score priority, and Sonarr season pack search/tracking.
 - Added initial R001 Prowlarr support for M-Team media metadata: search results can now carry audio languages, subtitle languages, and per-language audio specifications, with desktop/mobile search UI columns and Torznab/Newznab metadata output.
 - Added M-Team API access documentation and the `mteam-api` project skill for safe token-based real-environment probes across M-Team related work.
 - Updated R001 M-Team parsing against real API samples: full per-track media data was found in detail `mediainfo` text, and the parser now handles both MediaInfo track sections and BDInfo audio/subtitle tables.
@@ -18,3 +17,8 @@ Do not record routine AI activity, command runs, setup steps, or status checks h
 ## 2026-07-04
 
 - Refined Prowlarr R001 MediaInfo enrichment to return M-Team search results immediately, mark uncached rows as pending, fetch `/api/torrent/mediaInfo` through a per-release search API endpoint, and update each desktop/mobile search-result row in place with reused spinner loading indicators for audio/subtitle cells.
+
+## 2026-07-07
+
+- Refined Prowlarr R001 search-result UI: audio/subtitle headers now align with their row cells, audio and subtitle columns can be manually sorted, pending or empty media-info rows sort last, and the footer shows MediaInfo enrichment progress until completion.
+- Extended Prowlarr R001 search results so Custom Filters can filter by audio/subtitle text, and MediaInfo enrichment progress is now included in API and Torznab/Newznab release data as backend-tracked search-result state.

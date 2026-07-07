@@ -42,7 +42,7 @@ Each source repository is an independent Git repository. The workspace root is o
 - Do not modify `status/current.md` during initialization unless the user explicitly asks for that file to be changed. Record initialization activity in `status/log.md` instead.
 - Keep `status/current.md` focused on the active requirement, current repository state, blockers, and next steps. Do not use it as a per-action activity log.
 - Keep routine AI actions, command runs, setup steps, status checks, and other chronological activity notes in `status/log.md` when they need to be preserved.
-- Keep `status/changelog.md` for user-visible project, requirement, or feature changes. Do not record routine AI actions, command runs, setup steps, or status checks there.
+- Keep `status/changelog.md` only for implemented user-visible project or feature changes. Do not record draft requirements, planned work, routine AI actions, command runs, setup steps, or status checks there.
 - When changing cross-repo behavior, update `planning/decisions.md` or `status/current.md` as appropriate.
 - Prefer existing patterns inside each repository over introducing new shared abstractions.
 - Do not create build, test, debug, or release documentation from guesses.

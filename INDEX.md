@@ -34,7 +34,7 @@ This is the entry point for understanding the `arr-fork` workspace.
 | `planning/decisions.md` | User + AI | Accepted decisions and rationale |
 | `status/current.md` | AI | Current implementation state |
 | `status/log.md` | AI | Chronological AI activity log |
-| `status/changelog.md` | AI | Project requirement and feature change log |
+| `status/changelog.md` | AI | Implemented user-visible project and feature change log |
 | `guides/repo-map.md` | User + AI | Repository roles and stable code locations |
 | `repos.json` | User + AI | Repo paths, remotes, branches, and roles |
 | `scripts/` | User + AI | Workspace helper scripts |

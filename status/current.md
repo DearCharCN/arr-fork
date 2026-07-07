@@ -1,6 +1,6 @@
 # Current AI Status
 
-Last Updated: 2026-07-04
+Last Updated: 2026-07-07
 
 ## Active Requirement
 
@@ -28,14 +28,17 @@ Implement and validate the Prowlarr side of R001, confirm the exact M-Team API m
 - [x] Decide and implement the R001 media-info fetch strategy, because `/api/torrent/search` does not include full per-track audio/subtitle metadata and `/api/torrent/mediaInfo` can return the needed text directly.
 - [x] Implement Radarr R001 downstream support for Prowlarr Torznab/Newznab `audio` and `subs` attributes in release parsing, release API output, and interactive search display.
 - [x] Rework Prowlarr M-Team MediaInfo enrichment so initial search results return immediately and audio/subtitle metadata is filled row-by-row.
+- [x] Refine Prowlarr R001 search-result UI alignment, audio/subtitle manual sorting, and MediaInfo enrichment progress display.
+- [x] Add Custom Filter support for audio/subtitle search-result fields and backend-tracked MediaInfo search progress fields for API/Torznab/Newznab consumers.
+- [x] Record R005 draft requirement for Custom Filter OR condition support across Prowlarr, Sonarr, and Radarr.
 
 ## Repository Status
 
 ### Prowlarr
 
 Branch: my-feature, created from latest tag `v2.5.0.5422`.
-Changes: R001 source changes in M-Team parsing, release/search models, Newznab output, search UI columns, localization, and M-Team parser fixtures; M-Team parser now handles real `mediainfo` text, preserves Atmos in audio specifications, displays compact multi-audio/multi-subtitle labels with popover details in desktop/mobile search results, and no longer blocks initial search on uncached `/api/torrent/mediaInfo` calls. Search results mark uncached M-Team rows as pending, `POST /api/v1/search/mediaInfo` enriches one cached release at a time, the frontend runs a small per-row enrichment queue, and audio/subtitle cells show reused spinner loading indicators until each row returns. Successful MediaInfo responses remain cached for 7 days by torrent id and follow-up requests keep the explicit M-Team rate limit.
-Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer; backend `win-x64` publish and frontend production webpack were re-run after the compact media-display and Atmos parser update and passed. Backend `win-x64` publish was re-run after the full-page cached MediaInfo enrichment performance fix and passed. On 2026-07-04, frontend production webpack and backend `win-x64` publish were re-run after the row-by-row MediaInfo enrichment change and passed; installer generation was intentionally skipped.
+Changes: R001 source changes in M-Team parsing, release/search models, Newznab output, search UI columns, localization, and M-Team parser fixtures; M-Team parser now handles real `mediainfo` text, preserves Atmos in audio specifications, displays compact multi-audio/multi-subtitle labels with popover details in desktop/mobile search results, and no longer blocks initial search on uncached `/api/torrent/mediaInfo` calls. Search results mark uncached M-Team rows as pending, `POST /api/v1/search/mediaInfo` enriches one cached release at a time, the frontend runs a small per-row enrichment queue, and audio/subtitle cells show reused spinner loading indicators until each row returns. Audio/subtitle table headers now share row-cell widths, those columns are manually sortable and filterable through Custom Filters, pending or empty media-info rows sort last, returned MediaInfo does not automatically refresh an existing media sort until the user sorts again, and the footer shows backend-reported MediaInfo enrichment progress plus completion. API and Torznab/Newznab release data now expose `mediaInfoSearchId`, `mediaInfoProgressStatus`, `mediaInfoProgressCompleted`, and `mediaInfoProgressTotal` so downstream consumers can see whether the result set is completed or still pending with progress. Successful MediaInfo responses remain cached for 7 days by torrent id and follow-up requests keep the explicit M-Team rate limit.
+Build: Passed on 2026-07-03 for backend `win-x64`, frontend production webpack, and Windows installer; backend `win-x64` publish and frontend production webpack were re-run after the compact media-display and Atmos parser update and passed. Backend `win-x64` publish was re-run after the full-page cached MediaInfo enrichment performance fix and passed. On 2026-07-04, frontend production webpack and backend `win-x64` publish were re-run after the row-by-row MediaInfo enrichment change and passed; installer generation was intentionally skipped. On 2026-07-07, frontend production webpack was re-run after the alignment/sort/progress UI update and passed, then backend `win-x64` publish, frontend production webpack, package folder assembly, and Windows installer generation were re-run successfully. Backend `win-x64` publish and frontend production webpack were re-run again after the Custom Filter/backend progress fields update and passed; UI was copied into all direct-run output folders.
 Installer: Produced `Prowlarr.2.5.0.5422.win-x64.exe` under `Prowlarr/distribution/windows/setup/output/`.
 Tests: Not run; latest backend publish compiled test assemblies, including the Atmos parser fixture and the pending/per-row MediaInfo enrichment fixtures, but did not execute the test suite because test execution commands are still undocumented.
 
@@ -58,8 +61,9 @@ Tests: Not run; latest backend publish compiled test assemblies, including the n
 ## Next Steps
 
 - Decide whether R001 should add downstream Sonarr parsing for the new `audio` and `subs` Torznab attributes before starting R002.
-- Validate the row-by-row `/api/torrent/mediaInfo` enrichment path in the running compiled Prowlarr instance against real M-Team search results, confirming search results appear first and audio/subtitle cells update individually.
+- Validate the row-by-row `/api/torrent/mediaInfo` enrichment path in the running compiled Prowlarr instance against real M-Team search results, confirming search results appear first, audio/subtitle cells update individually, progress reaches completion, and manual audio/subtitle sorting treats pending or empty rows as last.
 - Validate Prowlarr-to-Radarr interactive search against real M-Team results, confirming Radarr receives `audioInfo` and `subs` in `/api/v3/release`.
+- Scope R005 by tracing Custom Filter persistence, API resources, Filter Builder UI, client-side filtering, and server-side collection filtering in Prowlarr/Sonarr/Radarr before implementation.
 - Run and document Sonarr build later with the user.
 - Run and document debug, test, and release steps later with the user.
 

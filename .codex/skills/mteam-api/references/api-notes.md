@@ -63,6 +63,16 @@ Observed from the production web frontend on 2026-07-03:
 
 No published separate quota was found for `/api/torrent/mediaInfo`. Treat it as a better-fit endpoint for media metadata, but not as proven unlimited or proven outside global API abuse limits.
 
+Observed `/api/torrent/mediaInfo` rate-limit behavior on 2026-07-08:
+
+- The endpoint can return HTTP 200 with API `code=1`, message `請求過於頻繁`, and empty `data`. Treat this message as retryable rate limiting even when the HTTP status is successful.
+- Small fixed-interval batches down to 1 second succeeded in live probes, including 20 attempts at 1-second spacing plus baseline.
+- Zero-delay burst limits were stateful and inconsistent, triggering at attempts 13, 18, or 20 in separate runs; one 25-request burst did not trigger.
+- Recovery is not fixed. One light event recovered after 60 seconds, while later events remained limited after quiet waits of 120, 180, 300, and 600 seconds.
+- Failed recovery probes may extend or refresh the server-side window. After a limit event, stop the active batch and avoid frequent recovery polling.
+
+Recommended MediaInfo enrichment policy: single concurrency, cache successful responses by torrent id, use a small delay between successful calls, and on `請求過於頻繁` stop the active batch and back off for at least 30 minutes, growing toward 60 minutes after repeated events.
+
 ## Request Shape Used By Prowlarr
 
 Search request:

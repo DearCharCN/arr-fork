@@ -1,6 +1,6 @@
 # Current AI Status
 
-Last Updated: 2026-07-07
+Last Updated: 2026-07-08
 
 ## Active Requirement
 
@@ -72,7 +72,7 @@ Tests: Not run; latest backend publish compiled test assemblies, including the n
 ## Blockers
 
 - Real M-Team `/api/torrent/search` responses only exposed summary fields such as `audioCodec`, `videoCodec`, and `hasChineseSubtitle`; full per-track audio/subtitle data was observed under `/api/torrent/detail` as `mediainfo` and under `/api/torrent/mediaInfo` as direct `data` text.
-- `/api/torrent/mediaInfo` has no published separate quota; follow-up enrichment requests cache successful responses for 7 days and use request rate limiting, but real per-row latency and quota behavior still need running-instance validation.
+- `/api/torrent/mediaInfo` has no published separate quota. Live probes showed HTTP 200 + `請求過於頻繁` + empty `data` for rate limiting, fixed small intervals down to 1 second can work for limited batches, zero-delay burst thresholds are stateful and inconsistent, and recovery can exceed 10 minutes after stronger/repeated limit events. Follow-up enrichment should cache successful responses, stay single-concurrency, and use long backoff after rate-limit messages.
 - Test execution commands are still undocumented; only build verification has been run.
 
 ## Notes For Next AI Session

@@ -12,11 +12,13 @@ description: Validate and inspect M-Team API access for any M-Team related devel
 - Use the `x-api-key` HTTP header. Do not use cookies for third-party API access.
 - Prefer small probes: `pageSize=1` for search and a single torrent id for detail.
 - Keep saved responses under `tmp/` and save only sanitized JSON unless the user explicitly requests a raw local capture.
+- For `/api/torrent/mediaInfo`, treat HTTP 200 with message `請求過於頻繁` as rate limiting; after it appears, stop probing and use a long quiet backoff instead of frequent recovery checks.
 
 ## References
 
 - Read `references/api-notes.md` before probing endpoints or updating parser fixtures.
 - Use `scripts/Invoke-MTeamApiProbe.ps1` for repeatable local probes.
+- Use `scripts/Measure-MTeamMediaInfoRateLimit.ps1` only when intentionally measuring `/api/torrent/mediaInfo` rate limits; start with `-BaselineOnly` after a quiet period.
 
 ## Probe Workflow
 
@@ -63,6 +65,7 @@ Only generate a download token when explicitly needed; it can count against down
 ## Applying Results
 
 - Use the smallest endpoint and payload that proves the behavior being tested.
+- Avoid zero-delay bursts unless the user explicitly asks to measure limits. Prior probes found fixed 1-second spacing can work for small batches, while burst and recovery thresholds are stateful and inconsistent.
 - Preserve real response shape in sanitized captures so parser fixtures can be updated accurately.
 - For media metadata work, preserve language-to-spec relationships, such as `English: TrueHD` and `Chinese: DDP 5.1`.
 - When code changes depend on the observed response, update the relevant parser fixture with a sanitized representative sample.

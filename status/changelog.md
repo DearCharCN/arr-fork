@@ -12,3 +12,9 @@ Do not record routine AI activity, command runs, setup steps, or status checks h
 - Updated R001 M-Team parsing against real API samples: full per-track media data was found in detail `mediainfo` text, and the parser now handles both MediaInfo track sections and BDInfo audio/subtitle tables.
 - Updated R001 M-Team enrichment strategy: when search results do not include parseable track metadata, Prowlarr now fetches `POST /api/torrent/mediaInfo?id=<torrent id>` and parses the returned MediaInfo text for audio languages, subtitle languages, and per-language audio specifications.
 - Refined R001 search-result media display: Prowlarr now shows compact multi-audio and multi-subtitle labels in desktop/mobile search results, exposes full media details in popovers, and preserves Atmos in parsed audio specifications.
+- Improved R001 M-Team search latency without dropping later results: MediaInfo enrichment now covers the full 100-result M-Team page by default, caches successful per-torrent MediaInfo responses for 7 days, and rate-limits MediaInfo requests to reduce "too frequent" failures.
+- Added Radarr R001 downstream support: Radarr now parses Prowlarr Torznab/Newznab `audio` and `subs` attributes, returns them from the release API, and shows compact media-info details in interactive search results.
+
+## 2026-07-04
+
+- Refined Prowlarr R001 MediaInfo enrichment to return M-Team search results immediately, mark uncached rows as pending, fetch `/api/torrent/mediaInfo` through a per-release search API endpoint, and update each desktop/mobile search-result row in place with reused spinner loading indicators for audio/subtitle cells.

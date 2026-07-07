@@ -1,6 +1,6 @@
 ---
 name: build-radarr
-description: Build Radarr from the arr-fork workspace using the verified local Windows workflow. Use when the user asks to compile, build, rebuild, or verify Radarr locally, especially from G:\arr-fork\Radarr.
+description: Build or run Radarr from the arr-fork workspace using the verified local Windows workflow. Use when the user asks to compile, build, rebuild, run the compiled build, stop the compiled build, or verify Radarr locally, especially from F:\arr-fork\Radarr.
 ---
 
 # Build Radarr
@@ -9,7 +9,7 @@ Use this workflow when compiling Radarr in this workspace. It captures the real 
 
 ## Preconditions
 
-Work from `G:\arr-fork\Radarr`.
+Work from `F:\arr-fork\Radarr`.
 
 Confirm:
 
@@ -54,7 +54,7 @@ dotnet msbuild -restore src/Radarr.sln -p:SelfContained=True -p:Configuration=Re
 Successful backend output includes:
 
 ```text
-G:\arr-fork\Radarr\_output\net8.0-windows\win-x64\publish\Radarr.exe
+F:\arr-fork\Radarr\_output\net8.0-windows\win-x64\publish\Radarr.exe
 ```
 
 Known non-fatal messages:
@@ -74,10 +74,53 @@ corepack yarn run build --env production
 Successful frontend output includes:
 
 ```text
-G:\arr-fork\Radarr\_output\UI\index.html
+F:\arr-fork\Radarr\_output\UI\index.html
 ```
 
 Browserslist/caniuse-lite outdated notices are expected and were non-fatal in the verified run.
+
+## Running The Compiled Build
+
+The user's machine may already have a stable installed Radarr running. Before starting a compiled workspace build, find and stop any existing Radarr process so the compiled build owns the port and profile during testing.
+
+Use process path inspection, not just process name, to distinguish stable installs from workspace builds:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name = 'Radarr.exe' OR Name = 'Radarr.Console.exe'" |
+  Select-Object ProcessId, Name, ExecutablePath, CommandLine
+```
+
+Before killing the stable process, record the stable executable path, command line, and whether it appears to be service-managed. Then stop/kill the existing process:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name = 'Radarr.exe' OR Name = 'Radarr.Console.exe'" |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+Start the compiled build from the workspace output or refreshed artifact folder. Prefer the artifact folder if it was just synchronized for local testing:
+
+```powershell
+Start-Process -WindowStyle Hidden -FilePath (Resolve-Path -LiteralPath _artifacts\win-x64\net8.0\Radarr\Radarr.Console.exe).Path
+```
+
+If the artifact console executable does not exist, start the publish console executable instead:
+
+```powershell
+Start-Process -WindowStyle Hidden -FilePath (Resolve-Path -LiteralPath _output\net8.0\win-x64\publish\Radarr.Console.exe).Path
+```
+
+## Stopping The Compiled Build And Restoring Stable
+
+When the user asks to end the compiled Radarr run, first inspect the running process path. Only stop the process if it is clearly running from this workspace, such as under `F:\arr-fork\Radarr\_output\` or `F:\arr-fork\Radarr\_artifacts\`.
+
+```powershell
+$workspace = (Resolve-Path -LiteralPath '.').Path
+Get-CimInstance Win32_Process -Filter "Name = 'Radarr.exe' OR Name = 'Radarr.Console.exe'" |
+  Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($workspace, [System.StringComparison]::OrdinalIgnoreCase) } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+Restart the stable installed Radarr using the executable path or service identity recorded before the compiled build was started. If no stable path was recorded, discover candidates from existing services and installed locations, but ask the user before starting anything when there is more than one plausible candidate.
 
 ## Windows Installer
 
@@ -123,7 +166,7 @@ $env:RADARRVERSION='6.2.2.0'
 Successful installer output from the verified run:
 
 ```text
-G:\arr-fork\Radarr\distribution\windows\setup\output\Radarr.6.2.2.0.win-x64.exe
+F:\arr-fork\Radarr\distribution\windows\setup\output\Radarr.6.2.2.0.win-x64.exe
 ```
 
 Expected non-fatal Inno warnings:

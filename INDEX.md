@@ -51,19 +51,25 @@ This is the entry point for understanding the `arr-fork` workspace.
 
 These folders are ignored by the workspace root Git repository and keep their own Git histories.
 
+## Local Compiled-Version Run Rule
+
+When the user asks to run a compiled Prowlarr, Radarr, or Sonarr build, first find any currently running stable installed process for that app, record its executable path or service identity, then stop/kill it before starting the compiled build from this workspace. This avoids port and profile conflicts between the stable install and the temporary development build.
+
+When the user asks to stop or end the compiled build, inspect the currently running process path first. Only kill it if it is clearly running from this workspace's compiled output or artifact folders. Then restart the recorded stable installed executable or service. If the stable install path or service identity was not recorded and discovery is ambiguous, ask the user before starting anything.
+
 ## Project Skills
 
 - `.codex/skills/build-prowlarr/SKILL.md`
-  - Use when asked to compile, package, or build a Windows installer for Prowlarr locally.
-  - Captures the verified NuGet v2 restore workaround, Windows build, frontend build, and Inno installer generation.
+  - Use when asked to compile, package, run the compiled build, stop the compiled build, or build a Windows installer for Prowlarr locally.
+  - Captures the verified NuGet v2 restore workaround, Windows build, frontend build, local compiled/stable run switching, and Inno installer generation.
 
 - `.codex/skills/build-radarr/SKILL.md`
-  - Use when asked to compile or build Radarr locally.
-  - Captures the verified Windows workflow and known pitfalls from the first successful run.
+  - Use when asked to compile, build, run the compiled build, or stop the compiled build for Radarr locally.
+  - Captures the verified Windows workflow, local compiled/stable run switching, and known pitfalls from the first successful run.
 
 - `.codex/skills/build-sonarr/SKILL.md`
-  - Use when asked to compile, package, or build a Windows installer for Sonarr locally.
-  - Captures the verified .NET 6 SDK setup, Windows build, frontend build, package folder, and bundled Inno installer generation.
+  - Use when asked to compile, package, run the compiled build, stop the compiled build, or build a Windows installer for Sonarr locally.
+  - Captures the verified .NET 6 SDK setup, Windows build, frontend build, package folder, local compiled/stable run switching, and bundled Inno installer generation.
 
 - `.codex/skills/mteam-api/SKILL.md`
   - Use when asked to validate M-Team API access or inspect real M-Team search/detail response fields.

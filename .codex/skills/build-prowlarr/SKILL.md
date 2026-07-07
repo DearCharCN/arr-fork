@@ -1,6 +1,6 @@
 ---
 name: build-prowlarr
-description: Build Prowlarr from the arr-fork workspace using the verified local Windows workflow. Use when the user asks to compile, build, rebuild, package, or create a Windows installer for Prowlarr.
+description: Build or run Prowlarr from the arr-fork workspace using the verified local Windows workflow. Use when the user asks to compile, build, rebuild, package, run the compiled build, stop the compiled build, or create a Windows installer for Prowlarr.
 ---
 
 # Build Prowlarr
@@ -12,7 +12,7 @@ Use this workflow when compiling Prowlarr in this workspace. It captures the rea
 Work from:
 
 ```text
-G:\arr-fork\Prowlarr
+F:\arr-fork\Prowlarr
 ```
 
 ## Preconditions
@@ -70,9 +70,9 @@ For another checked-out version, derive:
 Successful backend output includes:
 
 ```text
-G:\arr-fork\Prowlarr\_output\net8.0-windows\win-x64\publish\Prowlarr.exe
-G:\arr-fork\Prowlarr\_output\net8.0\win-x64\publish\Prowlarr.Console.exe
-G:\arr-fork\Prowlarr\_output\Prowlarr.Update\net8.0\win-x64\publish\Prowlarr.Update.exe
+F:\arr-fork\Prowlarr\_output\net8.0-windows\win-x64\publish\Prowlarr.exe
+F:\arr-fork\Prowlarr\_output\net8.0\win-x64\publish\Prowlarr.Console.exe
+F:\arr-fork\Prowlarr\_output\Prowlarr.Update\net8.0\win-x64\publish\Prowlarr.Update.exe
 ```
 
 Known non-fatal message:
@@ -91,7 +91,7 @@ corepack yarn run build --env production
 Successful frontend output includes:
 
 ```text
-G:\arr-fork\Prowlarr\_output\UI\index.html
+F:\arr-fork\Prowlarr\_output\UI\index.html
 ```
 
 ## Local Run UI Copy
@@ -133,6 +133,44 @@ Test-Path -LiteralPath _output\net8.0-windows\win-x64\publish\UI\login.html
 Test-Path -LiteralPath _artifacts\win-x64\net8.0\Prowlarr\UI\login.html
 Invoke-WebRequest -Uri 'http://localhost:9696/' -UseBasicParsing -TimeoutSec 10
 ```
+
+## Running The Compiled Build
+
+The user's machine may already have a stable installed Prowlarr running. Before starting a compiled workspace build, find and stop any existing Prowlarr process so the compiled build owns the port and profile during testing.
+
+Use process path inspection, not just process name, to distinguish stable installs from workspace builds:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name = 'Prowlarr.exe' OR Name = 'Prowlarr.Console.exe'" |
+  Select-Object ProcessId, Name, ExecutablePath, CommandLine
+```
+
+Before killing the stable process, record the stable executable path, command line, and whether it appears to be service-managed. Then stop/kill the existing process:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name = 'Prowlarr.exe' OR Name = 'Prowlarr.Console.exe'" |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+Start the compiled build from the workspace output. Prefer the publish console executable after confirming the UI output exists beside it or is linked to `_output\UI`:
+
+```powershell
+Test-Path -LiteralPath _output\net8.0\win-x64\publish\UI\login.html
+Start-Process -WindowStyle Hidden -FilePath (Resolve-Path -LiteralPath _output\net8.0\win-x64\publish\Prowlarr.Console.exe).Path
+```
+
+## Stopping The Compiled Build And Restoring Stable
+
+When the user asks to end the compiled Prowlarr run, first inspect the running process path. Only stop the process if it is clearly running from this workspace, such as under `F:\arr-fork\Prowlarr\_output\` or `F:\arr-fork\Prowlarr\_artifacts\`.
+
+```powershell
+$workspace = (Resolve-Path -LiteralPath '.').Path
+Get-CimInstance Win32_Process -Filter "Name = 'Prowlarr.exe' OR Name = 'Prowlarr.Console.exe'" |
+  Where-Object { $_.ExecutablePath -and $_.ExecutablePath.StartsWith($workspace, [System.StringComparison]::OrdinalIgnoreCase) } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+Restart the stable installed Prowlarr using the executable path or service identity recorded before the compiled build was started. If no stable path was recorded, discover candidates from existing services and installed locations, but ask the user before starting anything when there is more than one plausible candidate.
 
 ## Windows Installer
 
@@ -178,7 +216,7 @@ For a different tag, split `vA.B.C.D` into:
 Successful installer output from the verified run:
 
 ```text
-G:\arr-fork\Prowlarr\distribution\windows\setup\output\Prowlarr.2.5.0.5422.win-x64.exe
+F:\arr-fork\Prowlarr\distribution\windows\setup\output\Prowlarr.2.5.0.5422.win-x64.exe
 ```
 
 Expected non-fatal Inno warnings:

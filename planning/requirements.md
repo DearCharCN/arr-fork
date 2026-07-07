@@ -166,45 +166,67 @@ Priority: Medium
 
 - 需要先探索 Sonarr 当前 season pack 支持范围，确认是缺少搜索入口、自动追踪策略，还是后续导入映射能力。
 
-## R005 - Custom Filter 支持 OR 条件组合
+## R005 - Custom Filter 支持嵌套条件组
 
 Status: Draft
 Priority: High
 
 ### Goal
 
-扩展 Prowlarr 的 Custom Filter 条件组合能力，让用户可以在同一个自定义过滤器里配置 OR 条件，而不是只能把多条条件按 AND 组合；同时检查 Sonarr 和 Radarr 是否也存在相同限制，如果存在或缺少对应能力，也同步补齐。
+扩展 Prowlarr 的 Custom Filter 条件组合能力，让用户可以在同一个自定义过滤器里配置可嵌套的 AND/OR 条件组，而不是只能把多条条件按单层 AND 组合；同时检查 Sonarr 和 Radarr 是否也存在相同限制，如果存在或缺少对应能力，也同步补齐。
 
 ### User Story
 
-作为 Prowlarr/Sonarr/Radarr 用户，我希望 Custom Filter 可以表达“满足条件 A 或条件 B”的筛选逻辑，这样在搜索结果、电影/剧集列表、日历、历史记录等支持自定义过滤的页面里，不需要创建多个过滤器或反复手动切换。
+作为 Prowlarr/Sonarr/Radarr 用户，我希望 Custom Filter 可以表达“条件组 A 和条件组 B 同时满足”“条件组 A 或条件 C 满足”等更复杂的筛选逻辑，这样在搜索结果、电影/剧集列表、日历、历史记录等支持自定义过滤的页面里，不需要创建多个过滤器或反复手动切换。
+
+示例：
+
+- `(条件1 or 条件2) and (条件3 or 条件4)`
+- `(条件1 and 条件2) or 条件3`
 
 ### Expected Behavior
 
 - Custom Filter 可以继续保持当前默认 AND 行为，避免影响已有过滤器。
-- 用户可以在一个 Custom Filter 内选择条件组合方式，至少支持全部满足 AND 和任一满足 OR。
-- OR 组合应支持不同字段之间的条件，例如“音轨包含 Chinese 或字幕包含 Chinese”。
-- OR 组合应支持同一字段的多个条件，例如“Indexer 是 A 或 Indexer 是 B”。
-- 保存、读取、编辑、删除 Custom Filter 时，组合方式不会丢失。
-- 旧版本已保存的 Custom Filter 在升级后应自动按 AND 解释。
+- 旧版本已保存的 Custom Filter 在升级后应自动解释为一个根级 AND 条件组。
+- 用户可以在一个 Custom Filter 内创建条件组，条件组内可以包含普通条件，也可以包含子条件组。
+- 每个条件组都可以选择组合方式，至少支持全部满足 `and` 和任一满足 `or`。
+- 根级过滤器本身也应视为一个条件组，因此可以表达顶层 `and` 或顶层 `or`。
+- 嵌套组合应支持不同字段之间的条件，例如“音轨包含 Chinese 或字幕包含 Chinese”。
+- 嵌套组合应支持同一字段的多个条件，例如“Indexer 是 A 或 Indexer 是 B”。
+- 嵌套组合应支持普通条件和条件组混合，例如 `(条件1 and 条件2) or 条件3`。
+- 保存、读取、编辑、删除 Custom Filter 时，组层级、组内条件顺序、每个组的 `and`/`or` 组合方式都不会丢失。
 - Prowlarr、Sonarr、Radarr 中已有 Custom Filter 的页面应尽量保持一致的交互和数据结构。
+
+### UI / Interaction Expectations
+
+- 当前 Filter Builder 的单行条件编辑能力应继续保留：字段选择、比较方式选择、值输入、单行新增和删除。
+- UI 应支持把多条条件组织成视觉上清晰的条件组，可以参考用户草图：条件行之间用连接线或缩进表达层级，并在连接处显示当前组的 `and` 或 `or`。
+- 每个条件或条件组旁边应有添加/删除入口，用于在同级增加条件、增加子条件组或移除当前项。
+- 简单过滤器仍应易用：只有一层条件时，不应强迫用户理解复杂树结构。
+- 当存在嵌套组时，界面应清楚显示每个 `and`/`or` 只作用于哪个条件组，避免用户误解优先级。
+- 移动端或窄屏下也要能编辑嵌套结构，不能因为连接线或按钮过窄导致文字重叠或操作困难。
 
 ### Repositories Involved
 
 - Prowlarr: 主要修改 Custom Filter 数据模型/API、Filter Builder UI、前端过滤执行逻辑，以及搜索结果等已支持 Custom Filter 的页面。
-- Sonarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有 AND 或缺少 OR，也同步增加。
-- Radarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有 AND 或缺少 OR，也同步增加。
+- Sonarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有单层 AND 或缺少嵌套组，也同步增加。
+- Radarr: 先确认当前 Custom Filter 覆盖页面和过滤执行逻辑；如果同样只有单层 AND 或缺少嵌套组，也同步增加。
 
 ### Acceptance Criteria
 
-- Prowlarr 可以创建一个 OR Custom Filter，并正确显示满足任一条件的结果。
-- Prowlarr 已有 Custom Filter 不需要用户迁移，仍按 AND 生效。
+- Prowlarr 可以创建一个包含嵌套条件组的 Custom Filter，并正确显示满足条件树的结果。
+- Prowlarr 可以表达并正确执行 `(条件1 or 条件2) and (条件3 or 条件4)`。
+- Prowlarr 可以表达并正确执行 `(条件1 and 条件2) or 条件3`。
+- Prowlarr 已有 Custom Filter 不需要用户迁移，仍按根级 AND 组生效。
 - Sonarr 和 Radarr 的 Custom Filter 能力被检查并记录结论。
-- 如果 Sonarr/Radarr 存在同样 AND-only 限制，也能创建和使用 OR Custom Filter。
-- API 资源、数据库存储、前端状态类型和过滤执行逻辑都能表达组合方式。
-- 至少覆盖一个跨字段 OR 示例和一个同字段多值 OR 示例。
+- 如果 Sonarr/Radarr 存在同样单层 AND 限制，也能创建和使用嵌套条件组。
+- API 资源、数据库存储、前端状态类型和过滤执行逻辑都能表达条件节点、条件组节点、组层级和组组合方式。
+- 至少覆盖一个跨字段嵌套示例、一个同字段多值 OR 示例，以及一个普通条件和条件组混合的示例。
+- 编辑已保存的嵌套 Custom Filter 后再次保存，不会扁平化条件树或改变逻辑优先级。
+- 删除条件或条件组后，剩余过滤器仍保持有效；如果某个组被删空，应有明确的 UI 处理和保存校验。
 
 ### Notes
 
 - 初步代码搜索显示三套项目都存在 Custom Filter API 和前端 Filter Builder；客户端过滤入口里有按条件逐个判定的 AND 形态，需要实现前进一步确认 server-side collection 过滤和 client-side collection 过滤是否都要改。
-- 设计时要避免破坏现有 Filter Builder 的简单使用体验；OR 可以先作为整个过滤器级别的组合方式，后续再考虑嵌套条件组。
+- 实现时优先考虑可迁移的数据结构，例如用条件树表示过滤器：普通条件是叶子节点，条件组是包含子节点和 `and`/`or` 组合方式的分支节点。
+- 设计时要避免破坏现有 Filter Builder 的简单使用体验；嵌套能力应在需要时展开，而不是让所有简单过滤器都显得复杂。

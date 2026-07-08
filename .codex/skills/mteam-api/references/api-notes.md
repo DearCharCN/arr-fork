@@ -66,12 +66,25 @@ No published separate quota was found for `/api/torrent/mediaInfo`. Treat it as 
 Observed `/api/torrent/mediaInfo` rate-limit behavior on 2026-07-08:
 
 - The endpoint can return HTTP 200 with API `code=1`, message `請求過於頻繁`, and empty `data`. Treat this message as retryable rate limiting even when the HTTP status is successful.
-- Small fixed-interval batches down to 1 second succeeded in live probes, including 20 attempts at 1-second spacing plus baseline.
+- Small fixed-interval batches down to 1 second succeeded in live probes, including 20 attempts at 1-second spacing plus baseline. Later long-run probes failed at the 25th one-second interval request, the 49th two-second interval request, the 50th three-second interval request, and the 25th five-second interval request, so short spacing is not stable for large batches.
 - Zero-delay burst limits were stateful and inconsistent, triggering at attempts 13, 18, or 20 in separate runs; one 25-request burst did not trigger.
 - Recovery is not fixed. One light event recovered after 60 seconds, while later events remained limited after quiet waits of 120, 180, 300, and 600 seconds.
+- A later cycle/backoff probe using 1-second active spacing and 5-minute quiet backoff reached 100 total requests: failures occurred at total request 51 and total request 77, and each following 5-minute backoff check succeeded.
+- A 200-success cycle/backoff probe using 1-second active spacing required 209 total requests and saw 9 rate-limit responses. Active cycles 1, 2, and 3 each failed on attempt 51. The first two limit events recovered on the 5-minute backoff check; the third remained limited at 5, 6, 7, 8, 9, and 10 minutes and recovered on the 11-minute check.
+- A 360-success cycle/backoff probe using 10-second active spacing required 370 total requests and saw 10 rate-limit responses. The first active cycle failed on attempt 101, and the second failed on attempt 151. Both limit events remained limited at 5, 6, 7, and 8 minutes, then recovered on the 9-minute check. The third active cycle reached the success target.
+- A cross-endpoint probe succeeded on `/api/torrent/detail?id=<torrent id>` before forcing `/api/torrent/mediaInfo` to rate-limit. `mediaInfo` then returned `請求過於頻繁` on the 51st 1-second-spaced attempt, and an immediate follow-up `/api/torrent/detail?id=<torrent id>` still returned `SUCCESS` with `mediainfo`. This points to an endpoint-specific or bucketed limit rather than an immediate whole-token block, but does not prove there is no higher-level global quota.
+- A dual-endpoint alternating probe sent one request every 10 seconds, alternating `/api/torrent/mediaInfo` and `/api/torrent/detail`, so the same endpoint had a 20-second minimum interval. When one endpoint returned `請求過於頻繁`, only that endpoint cooled for 12 minutes. The run reached 500 successes after 506 total requests: 250 successes from each endpoint, 2 rate-limit responses from each endpoint, and 2 transient HTTP 502 transport errors. Endpoint-specific cooldown preserved useful throughput while the other endpoint was cooling.
+- A same-account token-switch probe tested two API tokens on `/api/torrent/mediaInfo`. Both tokens succeeded at baseline. Token A then hit `請求過於頻繁` on the 49th 1-second-spaced trigger attempt, and an immediate token B request also returned `請求過於頻繁`. Token A remained limited on a confirmation request. Switching to another token for the same account did not bypass the observed `mediaInfo` limiter; the probe cannot distinguish account-level from IP-level limiting.
 - Failed recovery probes may extend or refresh the server-side window. After a limit event, stop the active batch and avoid frequent recovery polling.
 
-Recommended MediaInfo enrichment policy: single concurrency, cache successful responses by torrent id, use a small delay between successful calls, and on `請求過於頻繁` stop the active batch and back off for at least 30 minutes, growing toward 60 minutes after repeated events.
+Recommended MediaInfo enrichment policy: single concurrency, cache successful responses by torrent id, use a conservative delay or per-batch cap for long runs, and on `請求過於頻繁` stop the active batch and back off for at least 30 minutes, growing toward 60 minutes after repeated events. Ten-second spacing is more durable than 1-5 seconds but is still not safe as an unlimited queue drain.
+
+Observed `/api/torrent/detail` rate-limit behavior on 2026-07-08:
+
+- The endpoint can return HTTP 200 with API `code=1`, message `請求過於頻繁`, and no useful `mediainfo`.
+- In a 1-second spacing probe, the baseline detail request succeeded, interval attempts 1-49 succeeded, and interval attempt 50 returned `請求過於頻繁`.
+- Immediately after the detail limit event, one `/api/torrent/mediaInfo?id=<torrent id>` request still returned `SUCCESS` with MediaInfo text. Combined with the inverse probe above, this suggests `detail` and `mediaInfo` have separate immediate limiter buckets, while a broader global quota remains possible.
+- In the dual-endpoint 20-second-per-endpoint probe, `detail` rate-limited at endpoint attempts 1 and 152, then recovered after each 12-minute endpoint-specific cooldown.
 
 ## Request Shape Used By Prowlarr
 

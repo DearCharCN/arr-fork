@@ -11,7 +11,7 @@ param(
     [ValidateRange(1, 50)]
     [int]$BurstMaxRequests = 8,
 
-    [ValidateRange(1, 20)]
+    [ValidateRange(1, 1000)]
     [int]$IntervalAttempts = 3,
 
     [int[]]$IntervalsSeconds = @(3, 5, 8, 10, 15, 20),
@@ -25,6 +25,8 @@ param(
     [string]$OutDirectory = 'tmp\mteam-mediainfo-rate-limit',
 
     [switch]$BaselineOnly,
+
+    [switch]$SkipRecovery,
 
     [switch]$SkipBurst,
 
@@ -311,7 +313,15 @@ if ($BaselineOnly) {
     $canContinue = $false
 } elseif ($baseline.classification -eq 'too_frequent') {
     Write-Host "Already rate limited at baseline; measuring recovery before burst."
-    $recovery = Wait-ForRecovery -Phase 'baseline_recovery' -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+    if ($SkipRecovery) {
+        $recovery = [pscustomobject]@{
+            recovered = $false
+            seconds = 0
+        }
+    } else {
+        $recovery = Wait-ForRecovery -Phase 'baseline_recovery' -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+    }
+
     $canContinue = $recovery.recovered
     $rateLimitEvents.Add([pscustomobject]@{
         phase = 'baseline'
@@ -320,7 +330,7 @@ if ($BaselineOnly) {
     }) | Out-Null
 
     if (-not $canContinue) {
-        Write-Host "Rate limit did not recover within $RecoveryMaxSeconds seconds; skipping burst and interval sweep."
+        Write-Host "Rate limit did not recover within $($recovery.seconds) seconds; skipping burst and interval sweep."
     }
 }
 
@@ -340,8 +350,17 @@ if ($canContinue -and -not $SkipBurst) {
     }
 
     if ($null -ne $burstLimitedAt) {
-        Write-Host "Burst hit rate limit at attempt $burstLimitedAt; measuring recovery."
-        $recovery = Wait-ForRecovery -Phase 'burst_recovery' -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+        if ($SkipRecovery) {
+            Write-Host "Burst hit rate limit at attempt $burstLimitedAt; recovery probing skipped."
+            $recovery = [pscustomobject]@{
+                recovered = $false
+                seconds = 0
+            }
+        } else {
+            Write-Host "Burst hit rate limit at attempt $burstLimitedAt; measuring recovery."
+            $recovery = Wait-ForRecovery -Phase 'burst_recovery' -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+        }
+
         $rateLimitEvents.Add([pscustomobject]@{
             phase = 'burst_recovery'
             recovered = $recovery.recovered
@@ -367,8 +386,17 @@ if ($canContinue -and -not $SkipIntervalSweep) {
         }
 
         if ($limited) {
-            Write-Host "Interval ${interval}s hit rate limit; measuring recovery before next interval."
-            $recovery = Wait-ForRecovery -Phase "interval_${interval}s_recovery" -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+            if ($SkipRecovery) {
+                Write-Host "Interval ${interval}s hit rate limit; recovery probing skipped."
+                $recovery = [pscustomobject]@{
+                    recovered = $false
+                    seconds = 0
+                }
+            } else {
+                Write-Host "Interval ${interval}s hit rate limit; measuring recovery before next interval."
+                $recovery = Wait-ForRecovery -Phase "interval_${interval}s_recovery" -ProbeEverySeconds $RecoveryProbeEverySeconds -MaxSeconds $RecoveryMaxSeconds
+            }
+
             $rateLimitEvents.Add([pscustomobject]@{
                 phase = "interval_${interval}s_recovery"
                 recovered = $recovery.recovered

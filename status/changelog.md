@@ -31,3 +31,17 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Fixed R005 nested Custom Filter editing in Prowlarr and Radarr so add-condition/add-group controls in a nested group modify that current group, and filtered release/search result tables now show rows once newly fetched additional data makes them match the active filter.
 - Fixed Prowlarr search MediaInfo progress display so the footer uses the latest returned progress across enriched rows instead of getting stuck on an older row's `Querying additional data 1/100` state.
 - Fixed Prowlarr M-Team MediaInfo enrichment under origin rate limiting: search-result additional-data requests now run serially, use the M-Team indexer's 5-second rate limit, keep rate-limited rows pending instead of marking them unavailable, retry pending rows with delay, and only advance overall progress once a row actually leaves pending state.
+
+## 2026-07-08
+
+- Added endpoint-aware M-Team additional-data scheduling in Prowlarr: MediaInfo and detail requests now have separate paced workers, endpoint-specific cooldowns, rate-limit rollback to the original queue, expiring cancellable handles, and a cancellation API for pending additional-data requests.
+- Updated Prowlarr and Radarr search enrichment to use windowed handle-based polling, so interactive searches create only a small active set of additional-data tasks at a time while continuing through the full result set as rows complete.
+- Updated Radarr automatic search enrichment so the four-row window limits task creation only; automatic decisions still wait for the required pending candidates to complete or time out before proceeding.
+- Fixed additional-data handle isolation across Prowlarr UI and Radarr: multiple handles can now observe one shared task result without leaking caller handles through shared release caches, handle renewal refreshes the shared task TTL, and tasks are canceled once all handles expire or are canceled.
+
+## 2026-07-09
+
+- Fixed R001 additional-data progress accounting so each Prowlarr MediaInfo search session counts completed releases independently, even when another Prowlarr/Radarr session completes the same cached torrent first.
+- Updated Prowlarr/Radarr additional-data progress totals to use the full displayed result set, so cached rows count as already completed, for example `35/60` instead of `0/25`.
+- Moved Radarr interactive-search additional-data progress into the modal footer so it remains visible while the result table scrolls.
+- Refined Prowlarr Audio/Subtitle sorting so completed-but-empty media rows and pending/not-yet-requested media rows are kept in separate sort groups instead of being mixed together as the same empty value.

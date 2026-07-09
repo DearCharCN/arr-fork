@@ -140,6 +140,7 @@ Implemented user-visible project and feature changes belong in `status/changelog
 
 ## 2026-07-09
 
+- Updated `AGENTS.md` per user request so future completed implementation requests and bug fixes are committed directly after status review and feasible documented verification, with separate commits per touched source repository and unrelated changes excluded.
 - Fixed the remaining R001 progress-count isolation bug: Prowlarr progress entries now keep a per-search completed release-key set, so completion of a shared torrent by another Prowlarr/Radarr session no longer prevents the current search session from incrementing its own count. Prowlarr also initializes additional-data progress as completed rows over full result rows, and Radarr/Prowlarr frontends use full result count in their fallback progress calculation.
 - Moved Radarr interactive-search additional-data progress from the table body alert into `MovieInteractiveSearchModalContent`'s `ModalFooter`, with a small footer progress area beside the close button.
 - Verified with `git diff --check` for Prowlarr and Radarr, Prowlarr backend `win-x64` publish, Prowlarr frontend production webpack, Radarr backend `win-x64` publish, and Radarr frontend production webpack. Copied UI output into direct-run output folders, restarted Prowlarr PID `180364` and Radarr PID `80648` from `_output/net8.0/win-x64/publish`, and confirmed `http://localhost:9696/` and `http://localhost:7878/` returned `200 text/html`.

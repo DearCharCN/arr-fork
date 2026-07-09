@@ -44,5 +44,6 @@ Each source repository is an independent Git repository. The workspace root is o
 - Keep routine AI actions, command runs, setup steps, status checks, and other chronological activity notes in `status/log.md` when they need to be preserved.
 - Keep `status/changelog.md` only for implemented user-visible project or feature changes. Do not record draft requirements, planned work, routine AI actions, command runs, setup steps, or status checks there.
 - When changing cross-repo behavior, update `planning/decisions.md` or `status/current.md` as appropriate.
+- After completing an implementation request or bug fix, create a Git commit directly without waiting for another user prompt, unless the user explicitly asks not to commit. Before committing, inspect the touched repository status, run the relevant documented verification when feasible, stage only the files changed for the completed request, avoid including unrelated user or generated changes, and report the commit hash. If work spans multiple independent source repositories, create separate commits in each touched repository.
 - Prefer existing patterns inside each repository over introducing new shared abstractions.
 - Do not create build, test, debug, or release documentation from guesses.

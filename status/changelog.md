@@ -47,3 +47,4 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Refined Prowlarr Audio/Subtitle sorting so completed-but-empty media rows and pending/not-yet-requested media rows are kept in separate sort groups instead of being mixed together as the same empty value.
 - Added Radarr R006 backend release selection controls: Release Filter Profiles, Audio Language Mappings, Audio Score Profiles, Audio Language Preferences, and Custom Format Mutex Groups can now drive Quality Profile decisions and automatic release ordering.
 - Added Radarr interactive-search selected-audio and audio-score output, including score breakdown popovers and custom filter/sort fields for the selected audio result.
+- Added a Radarr Release Scoring settings page with create/edit/delete modals for Audio Language Mappings, Audio Score Profiles, Audio Language Preferences, and Custom Format Mutex Groups.

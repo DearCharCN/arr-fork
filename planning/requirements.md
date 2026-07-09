@@ -230,3 +230,63 @@ Priority: High
 - 初步代码搜索显示三套项目都存在 Custom Filter API 和前端 Filter Builder；客户端过滤入口里有按条件逐个判定的 AND 形态，需要实现前进一步确认 server-side collection 过滤和 client-side collection 过滤是否都要改。
 - 实现时优先考虑可迁移的数据结构，例如用条件树表示过滤器：普通条件是叶子节点，条件组是包含子节点和 `and`/`or` 组合方式的分支节点。
 - 设计时要避免破坏现有 Filter Builder 的简单使用体验；嵌套能力应在需要时展开，而不是让所有简单过滤器都显得复杂。
+
+## R006 - Radarr 后端 Release Filter、音轨评分和互斥分数配置
+
+Status: Draft
+Priority: High - Next
+
+### Goal
+
+在 Radarr 中新增后端可执行的 Release Filter、可配置音轨语言映射、音轨评分、音轨语言偏好和互斥分数机制，让自动追踪和交互式搜索都能按照用户偏好筛选和排序资源。第一阶段不做全列加权排序，先实现 Custom Format 分数优先、音轨分数次优先。
+
+详细设计见 `planning/radarr-release-filter-audio-scoring-design.md`。
+
+### User Story
+
+作为 Radarr 用户，我希望可以配置音轨语言识别、音轨评分、音轨语言偏好和后端筛选规则，使自动追踪不只依赖标题或前端表格过滤，而是能真正根据每个 release 的音轨、字幕、Custom Format 和质量配置选择最符合偏好的资源。
+
+### Expected Behavior
+
+- Radarr 支持后端 Release Filter Profile，自动搜索、RSS/追踪和交互式搜索 API 都能执行同一套筛选逻辑。
+- Release Filter 支持嵌套 `and`/`or` 条件组，并能判断标题、站点、协议、质量、Custom Format 分数、大小、年龄、种子数、音轨语言、字幕语言、选定音轨和音轨分数等字段。
+- 当 Filter 使用音轨/字幕/音轨分数等 R001 MediaInfo 字段时，自动追踪需要等待附加数据完成或明确失败后再做最终判断。
+- 用户可以配置 Audio Language Mapping，例如把 `Guoyu`、`Mandarin`、`Chinese`、`国语`、`國語` 映射为标准语言 `Chinese`。
+- 未配置映射的语言继续使用默认语言名或 ISO 语言匹配。
+- 音轨与电影原始语言匹配时，应额外打上虚拟标签 `Origin`。
+- 用户可以配置 Audio Score Profile，通过文本或正则规则给单条音轨加分。
+- 音轨评分支持互斥组；同一个互斥组内多个规则命中同一音轨时，只取最高分。
+- 用户可以配置 Audio Language Preference，例如 `Chinese` 优先，其次 `Origin`，并配置“备选语言音轨比首选语言最高音轨高出多少分时放弃首选”的阈值。
+- Radarr 需要给每个音轨评分，再根据语言偏好和分差阈值选择唯一的 selected audio track。
+- 只有 selected audio track 的分数进入 release 的音轨分数列和自动排序。
+- Custom Format 支持互斥组；启用的互斥组里多个 Custom Format 同时命中时，只取最高分。
+- Quality Profile 可以选择后端 Filter、要激活的 Custom Format 互斥组、音轨语言偏好、音轨评分配置和音轨互斥配置。
+- 自动追踪排序第一阶段按 Custom Format 分数优先，再按音轨分数排序，后续沿用 Radarr 现有 tie-breaker。
+
+### Repositories Involved
+
+- Radarr: 主要修改后端筛选、质量配置、Custom Format 分数计算、音轨评分/选择、Release API、交互式搜索显示和自动追踪排序。
+- Prowlarr: 不新增核心需求，但 R006 依赖 R001 已提供的 `audio`、`subs` 和 MediaInfo 附加数据。
+- Sonarr: 暂不纳入第一阶段；后续可参考 Radarr 实现决定是否迁移。
+
+### Acceptance Criteria
+
+- 可以在 Radarr 中配置 `Guoyu`、`Mandarin`、`Chinese` 映射为标准 `Chinese` 音轨语言。
+- 原始语言音轨能被打上 `Origin` 标签。
+- 可以配置音轨语言偏好顺序，例如 `Chinese` -> `Origin`。
+- 可以配置分差阈值，使高分备选语言音轨在超过阈值时替代首选语言音轨。
+- 每个音轨独立评分，且只选择一个音轨作为 release 的 selected audio track。
+- 音轨互斥组能避免 `7.1`/`5.1`、`TrueHD`/`DTS-HD MA`、`DDP`/`DD` 等同组规则重复加分。
+- 交互式搜索显示 selected audio track 和音轨分数。
+- Custom Format 互斥组启用后，同组命中项只计最高分。
+- Quality Profile 可以绑定后端 Filter、Custom Format 互斥组和音轨评分/偏好配置。
+- 自动搜索和 RSS/追踪能执行后端 Filter，而不是只依赖前端表格过滤。
+- Filter 依赖 MediaInfo 字段时，自动追踪会等待 R001 附加数据再做最终通过/拒绝判断。
+- 自动追踪候选排序在启用对应策略后先比较 Custom Format 分数，再比较音轨分数。
+
+### Notes
+
+- 这是当前优先处理的新功能计划。
+- 第一阶段不实现全列加权排序。
+- 设计稿：`planning/radarr-release-filter-audio-scoring-design.md`。
+- 现有 Radarr 硬编码中文媒体偏好可作为实现参考，但 R006 应将其升级为可配置机制。

@@ -1,0 +1,1473 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Radarr 代码架构 Wiki</title>
+  <style>
+    :root {
+      --bg: #f7f8f6;
+      --panel: #ffffff;
+      --panel-2: #f1f5f4;
+      --text: #17201f;
+      --muted: #60706d;
+      --line: #d9e1df;
+      --strong-line: #aec1bc;
+      --accent: #117c6f;
+      --accent-2: #bf6b23;
+      --accent-3: #5863b5;
+      --accent-4: #a33b57;
+      --code-bg: #eef2ef;
+      --shadow: 0 14px 34px rgba(21, 35, 33, 0.08);
+      --radius: 8px;
+      --mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+      --sans: Inter, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.58;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    code {
+      padding: 0.1rem 0.28rem;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--code-bg);
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: #fbfcfb;
+      padding: 24px 18px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .brand-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .nav-group {
+      margin: 18px 0 8px;
+      color: #6f4f2e;
+      font-size: 0.74rem;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: #263331;
+      font-size: 0.92rem;
+    }
+
+    .nav-link:hover {
+      background: var(--panel-2);
+      text-decoration: none;
+    }
+
+    .main {
+      min-width: 0;
+      padding: 36px min(5vw, 64px) 72px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 30px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(135deg, rgba(17, 124, 111, 0.08), rgba(191, 107, 35, 0.07)),
+        var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 9px;
+      border: 1px solid var(--strong-line);
+      border-radius: 999px;
+      background: #fafffd;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 760;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      margin: 0;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 980px;
+      font-size: clamp(2rem, 4vw, 4rem);
+      font-weight: 820;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 2vw, 2.1rem);
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: 1.18rem;
+      font-weight: 780;
+    }
+
+    h4 {
+      font-size: 0.96rem;
+      font-weight: 760;
+    }
+
+    .lead {
+      max-width: 980px;
+      margin: 0;
+      color: #344341;
+      font-size: 1.05rem;
+    }
+
+    .meta-row,
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #33423f;
+      font-size: 0.82rem;
+    }
+
+    .section {
+      margin-top: 26px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 8px 22px rgba(20, 32, 30, 0.045);
+      scroll-margin-top: 24px;
+    }
+
+    .section-header {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .section-header p {
+      max-width: 980px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .note,
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfb;
+      padding: 14px;
+    }
+
+    .note strong,
+    .mini-card strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #1f302d;
+    }
+
+    .mini-card p,
+    .note p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .path-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .path-list a {
+      display: inline-flex;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      font-family: var(--mono);
+      font-size: 0.86rem;
+    }
+
+    .diagram-block {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .diagram-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #22302e;
+      font-weight: 760;
+    }
+
+    .diagram-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 620;
+    }
+
+    .module-map,
+    .flow {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, #ffffff, #f9fbfa);
+    }
+
+    .module-map {
+      display: grid;
+      gap: 12px;
+    }
+
+    .map-row,
+    .flow-row {
+      display: grid;
+      gap: 10px;
+    }
+
+    .map-row.cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .map-row.cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .map-row.cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .map-node,
+    .flow-node {
+      min-width: 0;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .map-node.alt,
+    .flow-node.alt {
+      border-left-color: var(--accent-2);
+    }
+
+    .map-node.blue,
+    .flow-node.blue {
+      border-left-color: var(--accent-3);
+    }
+
+    .map-node.red,
+    .flow-node.red {
+      border-left-color: var(--accent-4);
+    }
+
+    .map-node strong,
+    .flow-node strong {
+      display: block;
+      margin-bottom: 3px;
+      overflow-wrap: anywhere;
+      font-size: 0.92rem;
+    }
+
+    .map-node span,
+    .flow-node span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+    }
+
+    .flow-row {
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
+      align-items: stretch;
+    }
+
+    .flow-row.four {
+      grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1fr);
+    }
+
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .module-detail {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .split-detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+      gap: 16px;
+    }
+
+    .bullet-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .bullet-list li {
+      margin: 4px 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4f2;
+      color: #21312e;
+      font-size: 0.84rem;
+    }
+
+    td {
+      color: #374744;
+      font-size: 0.9rem;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .callout {
+      margin: 16px 0 0;
+      padding: 13px 14px;
+      border: 1px solid #e5c8ad;
+      border-left: 4px solid var(--accent-2);
+      border-radius: var(--radius);
+      background: #fffaf5;
+      color: #4b3525;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .file-link {
+      display: grid;
+      gap: 4px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfb;
+    }
+
+    .file-link b {
+      color: #21312e;
+      font-size: 0.86rem;
+    }
+
+    .file-link a {
+      overflow-wrap: anywhere;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .top-link {
+      display: inline-flex;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 1100px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .nav-link {
+        display: inline-flex;
+        margin: 2px;
+      }
+
+      .two-col,
+      .three-col,
+      .split-detail,
+      .file-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .map-row.cols-4,
+      .map-row.cols-3,
+      .map-row.cols-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-row,
+      .flow-row.four {
+        grid-template-columns: 1fr;
+      }
+
+      .arrow {
+        min-height: 18px;
+        transform: rotate(90deg);
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        padding: 0;
+      }
+
+      .section,
+      .hero {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout" id="top">
+    <aside class="sidebar" aria-label="Radarr wiki navigation">
+      <div class="brand">
+        <h1 class="brand-title">Radarr 架构 Wiki</h1>
+        <p class="brand-subtitle">静态 HTML 版，覆盖代码组织、运行流程和本地 fork 扩展点。</p>
+      </div>
+
+      <div class="nav-group">总览</div>
+      <a class="nav-link" href="#overview">架构总览</a>
+      <a class="nav-link" href="#map">项目层级图</a>
+      <a class="nav-link" href="#runtime">启动与运行时</a>
+      <a class="nav-link" href="#data">数据层</a>
+
+      <div class="nav-group">核心业务</div>
+      <a class="nav-link" href="#providers">Provider 体系</a>
+      <a class="nav-link" href="#movies">电影库</a>
+      <a class="nav-link" href="#search">搜索与 Release</a>
+      <a class="nav-link" href="#decision">决策引擎</a>
+      <a class="nav-link" href="#download">下载与导入</a>
+
+      <div class="nav-group">界面与扩展</div>
+      <a class="nav-link" href="#api">API 层</a>
+      <a class="nav-link" href="#frontend">前端层</a>
+      <a class="nav-link" href="#custom-filter">Custom Filter</a>
+      <a class="nav-link" href="#prowlarr-media">Prowlarr 媒体信息</a>
+      <a class="nav-link" href="#developer-index">开发者索引</a>
+    </aside>
+
+    <main class="main">
+      <section class="hero" id="overview">
+        <span class="eyebrow">Radarr / G:\arr-fork / my-feature</span>
+        <h1>Radarr 代码架构自上而下拆解</h1>
+        <p class="lead">
+          这份 wiki 从 Radarr 的进程入口开始，一层层拆到 Core 业务域、Provider 扩展体系、搜索下载流水线、API 与前端数据流。
+          每个大模块都配有模块组织图和运行流程图，便于顺着请求、命令、事件和数据模型定位代码。
+        </p>
+        <div class="meta-row">
+          <span class="pill">生成日期: 2026-07-08</span>
+          <span class="pill">后端: .NET 8 / ASP.NET Core / DryIoc / Dapper</span>
+          <span class="pill">前端: React 18 / Redux 4 / Webpack</span>
+          <span class="pill">重点扩展: R001 mediaInfo / R005 nested filter</span>
+        </div>
+      </section>
+
+      <section class="section" id="map">
+        <div class="section-header">
+          <h2>项目层级图</h2>
+          <p>
+            Radarr 后端仍保留历史上的 <code>NzbDrone.*</code> 命名。真正的业务核心在 <code>NzbDrone.Core</code>，
+            HTTP 和 API 是薄包装，Windows/Console 入口负责把同一个 Host 跑起来。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">solution level</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node">
+                <strong>Radarr.Console</strong>
+                <span>命令行入口，调用 Host Bootstrap。</span>
+              </div>
+              <div class="map-node">
+                <strong>Radarr</strong>
+                <span>Windows GUI/tray 入口，附加托盘服务。</span>
+              </div>
+              <div class="map-node blue">
+                <strong>Radarr.Host</strong>
+                <span>Kestrel、DI、配置、认证、HTTP 管线。</span>
+              </div>
+              <div class="map-node alt">
+                <strong>Radarr.Update</strong>
+                <span>应用更新相关独立目标。</span>
+              </div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node blue">
+                <strong>Radarr.Core</strong>
+                <span>电影库、索引器、决策、下载、导入、数据库。</span>
+              </div>
+              <div class="map-node blue">
+                <strong>Radarr.Api.V3</strong>
+                <span>REST API controllers 和 resources。</span>
+              </div>
+              <div class="map-node blue">
+                <strong>Radarr.Http</strong>
+                <span>通用 REST 基类、中间件、认证、静态前端。</span>
+              </div>
+              <div class="map-node blue">
+                <strong>Radarr.SignalR</strong>
+                <span>消息推送，驱动 UI 实时更新。</span>
+              </div>
+            </div>
+            <div class="map-row cols-3">
+              <div class="map-node alt">
+                <strong>Radarr.Common</strong>
+                <span>HTTP、磁盘、反射、序列化、环境信息等基础工具。</span>
+              </div>
+              <div class="map-node alt">
+                <strong>Radarr.Windows / Mono</strong>
+                <span>平台能力封装。</span>
+              </div>
+              <div class="map-node red">
+                <strong>frontend/src</strong>
+                <span>React 页面、Redux 数据层、通用组件和样式。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">process to UI</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Radarr.Console.exe</strong><span>解析命令行和启动上下文。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Bootstrap.Start</strong><span>选择 Service / Interactive / Utility。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Startup.Configure</strong><span>初始化数据库、日志、中间件和 endpoints。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>Frontend + API</strong><span>浏览器访问静态 UI，UI 调用 /api/v3。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-grid">
+          <div class="file-link">
+            <b>解决方案</b>
+            <a href="../../Radarr/src/Radarr.sln">Radarr/src/Radarr.sln</a>
+          </div>
+          <div class="file-link">
+            <b>入口项目</b>
+            <a href="../../Radarr/src/NzbDrone.Console/Radarr.Console.csproj">NzbDrone.Console/Radarr.Console.csproj</a>
+          </div>
+          <div class="file-link">
+            <b>Host 项目</b>
+            <a href="../../Radarr/src/NzbDrone.Host/Radarr.Host.csproj">NzbDrone.Host/Radarr.Host.csproj</a>
+          </div>
+          <div class="file-link">
+            <b>Core 项目</b>
+            <a href="../../Radarr/src/NzbDrone.Core/Radarr.Core.csproj">NzbDrone.Core/Radarr.Core.csproj</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="runtime">
+        <div class="section-header">
+          <h2>启动与运行时</h2>
+          <p>
+            运行时层负责把配置、日志、数据库、DI 容器和 Web Host 装配好。它不承载业务决策，但决定所有服务如何被发现和执行。
+          </p>
+        </div>
+
+        <div class="split-detail">
+          <div class="stack">
+            <div class="diagram-block">
+              <div class="diagram-title">模块组织图 <span class="diagram-label">Radarr.Host</span></div>
+              <div class="module-map">
+                <div class="map-row cols-3">
+                  <div class="map-node"><strong>Bootstrap</strong><span>应用模式、配置读取、HostBuilder。</span></div>
+                  <div class="map-node"><strong>Startup</strong><span>ServiceCollection、HTTP middleware、endpoints。</span></div>
+                  <div class="map-node"><strong>AppLifetime</strong><span>启动/停止事件和浏览器打开逻辑。</span></div>
+                </div>
+                <div class="map-row cols-3">
+                  <div class="map-node blue"><strong>UtilityModeRouter</strong><span>安装/卸载服务、帮助、URL 注册。</span></div>
+                  <div class="map-node blue"><strong>AccessControl</strong><span>Windows 防火墙访问规则。</span></div>
+                  <div class="map-node alt"><strong>SingleInstance</strong><span>避免多个实例抢同一个 appdata。</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="diagram-block">
+              <div class="diagram-title">运行流程图 <span class="diagram-label">host startup</span></div>
+              <div class="flow">
+                <div class="flow-row">
+                  <div class="flow-node"><strong>StartupContext</strong><span>读取 args、appdata、flags。</span></div>
+                  <div class="arrow">→</div>
+                  <div class="flow-node blue"><strong>GetApplicationMode</strong><span>判断 Service / Interactive / Utility。</span></div>
+                  <div class="arrow">→</div>
+                  <div class="flow-node blue"><strong>CreateConsoleHostBuilder</strong><span>绑定端口、SSL、DryIoc、Kestrel。</span></div>
+                </div>
+                <div class="flow-row">
+                  <div class="flow-node"><strong>ConfigureServices</strong><span>Controllers、Swagger、SignalR、Auth。</span></div>
+                  <div class="arrow">→</div>
+                  <div class="flow-node alt"><strong>Configure</strong><span>迁移 DB、注册日志、发布 ApplicationStartingEvent。</span></div>
+                  <div class="arrow">→</div>
+                  <div class="flow-node red"><strong>UseEndpoints</strong><span>MapHub + MapControllers。</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note">
+            <strong>阅读重点</strong>
+            <p>
+              <code>Bootstrap.ASSEMBLIES</code> 决定自动注册的程序集。Radarr 的服务基本靠 DryIoc 扫描接口和实现类型，
+              所以新增服务时通常只要保持接口/实现命名和构造函数注入即可进入容器。
+            </p>
+            <ul class="bullet-list">
+              <li><a href="../../Radarr/src/NzbDrone.Host/Bootstrap.cs">NzbDrone.Host/Bootstrap.cs</a></li>
+              <li><a href="../../Radarr/src/NzbDrone.Host/Startup.cs">NzbDrone.Host/Startup.cs</a></li>
+              <li><a href="../../Radarr/src/NzbDrone.Console/ConsoleApp.cs">NzbDrone.Console/ConsoleApp.cs</a></li>
+              <li><a href="../../Radarr/src/NzbDrone/WindowsApp.cs">NzbDrone/WindowsApp.cs</a></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="data">
+        <div class="section-header">
+          <h2>数据层</h2>
+          <p>
+            Radarr 的数据访问不是 Entity Framework，而是 Dapper + 自定义表映射 + 仓储。主数据库和日志数据库在启动时初始化，
+            migration 文件按编号演进 schema。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">NzbDrone.Core/Datastore</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>TableMapping</strong><span>实体到表、忽略字段、关系映射、类型转换。</span></div>
+              <div class="map-node"><strong>BasicRepository</strong><span>通用 CRUD、分页、批量写入、事件发布。</span></div>
+              <div class="map-node blue"><strong>MainDatabase</strong><span>业务数据连接和 migration。</span></div>
+              <div class="map-node blue"><strong>LogDatabase</strong><span>日志表连接。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>Migration</strong><span>编号迁移脚本，创建/修改表结构。</span></div>
+              <div class="map-node alt"><strong>Converters</strong><span>Quality、Language、EmbeddedDocument 等转换。</span></div>
+              <div class="map-node"><strong>SqlBuilder</strong><span>SQLite/Postgres 查询构造。</span></div>
+              <div class="map-node"><strong>ModelBase</strong><span>所有持久化模型的 Id 基类。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">repository write</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Core Service</strong><span>例如 MovieService.Update。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>Repository</strong><span>继承 BasicRepository。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Dapper SQL</strong><span>根据 TableMapping 生成参数化 SQL。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>ModelEvent</strong><span>写入后发布 created/updated/deleted 事件。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>数据对象</th>
+                <th>表/模块</th>
+                <th>作用</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Movie / MovieMetadata</td>
+                <td><code>Movies</code>, <code>MovieMetadata</code></td>
+                <td>库中电影和 TMDb 元数据，Movie 持有配置和路径，Metadata 持有标题、年份、外部 id。</td>
+              </tr>
+              <tr>
+                <td>MovieFile</td>
+                <td><code>MovieFiles</code></td>
+                <td>已导入媒体文件，包含质量、语言、MediaInfo、大小和相对路径。</td>
+              </tr>
+              <tr>
+                <td>ProviderDefinition</td>
+                <td><code>Indexers</code>, <code>DownloadClients</code>, <code>ImportLists</code></td>
+                <td>所有 provider 的配置骨架，Settings 作为嵌入 JSON 文档保存。</td>
+              </tr>
+              <tr>
+                <td>CommandModel</td>
+                <td><code>Commands</code></td>
+                <td>后台任务队列的持久化记录，支持重启后 requeue。</td>
+              </tr>
+              <tr>
+                <td>CustomFilter</td>
+                <td><code>CustomFilters</code></td>
+                <td>前端列表筛选条件。本地 R005 对前端表达式树做了扩展，后端存储仍走同一模型。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="providers">
+        <div class="section-header">
+          <h2>Provider 体系</h2>
+          <p>
+            Provider 是 Radarr 最重要的扩展机制。索引器、下载客户端、导入列表、通知和 metadata 生成器都使用同一套
+            definition、settings、schema、test、status 和 API 管理模式。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">ThingiProvider</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>IProvider</strong><span>provider 实现的统一接口。</span></div>
+              <div class="map-node"><strong>ProviderDefinition</strong><span>DB 中保存的启用状态、实现名、settings。</span></div>
+              <div class="map-node"><strong>IProviderConfig</strong><span>每个 provider 的设置模型和校验。</span></div>
+              <div class="map-node blue"><strong>ProviderFactory</strong><span>发现实现、创建实例、测试、发布变更事件。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>IndexerFactory</strong><span>按 RSS/自动/交互能力筛选 indexers。</span></div>
+              <div class="map-node alt"><strong>DownloadClientFactory</strong><span>按协议、优先级和 tags 选择客户端。</span></div>
+              <div class="map-node alt"><strong>ImportListFactory</strong><span>发现列表来源并定期同步电影。</span></div>
+              <div class="map-node alt"><strong>NotificationFactory</strong><span>按事件类型筛选通知目标。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">provider management</span></div>
+          <div class="flow">
+            <div class="flow-row">
+              <div class="flow-node"><strong>GET schema</strong><span>API 请求 provider 模板。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>GetDefaultDefinitions</strong><span>从实现类生成默认设置。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>Frontend form</strong><span>根据 fields 渲染配置表单。</span></div>
+            </div>
+            <div class="flow-row">
+              <div class="flow-node"><strong>POST / PUT</strong><span>保存 provider。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Validate + Test</strong><span>校验 settings，必要时测试连通性。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>ProviderUpdatedEvent</strong><span>状态缓存、UI、调度器感知变更。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          新增一个索引器或下载客户端时，通常要同时处理 Core provider 实现、Settings/Validator、Factory 可见性、
+          API resource 映射、前端 settings 页面 schema 渲染和测试按钮反馈。
+        </div>
+      </section>
+
+      <section class="section" id="movies">
+        <div class="section-header">
+          <h2>电影库模块</h2>
+          <p>
+            电影库是 Radarr 的中心状态。搜索、下载、导入、Wanted、Calendar、Collections 都围绕库中的 Movie 和 MovieFile 运行。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">NzbDrone.Core/Movies</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>MovieService</strong><span>电影 CRUD、路径和 MovieFile 事件响应。</span></div>
+              <div class="map-node"><strong>AddMovieService</strong><span>创建电影、初始化质量配置和监控状态。</span></div>
+              <div class="map-node blue"><strong>RefreshMovieService</strong><span>从 metadata source 刷新标题、年份、状态等。</span></div>
+              <div class="map-node blue"><strong>MovieMetadataService</strong><span>MovieMetadata 的持久化和查询。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>AlternativeTitles</strong><span>别名匹配，用于解析和搜索。</span></div>
+              <div class="map-node alt"><strong>Translations</strong><span>不同语言标题，用于搜索 query 扩展。</span></div>
+              <div class="map-node alt"><strong>Collections</strong><span>合集 metadata 和电影关联。</span></div>
+              <div class="map-node red"><strong>Credits</strong><span>演员和制作人员数据。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">add and refresh movie</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Frontend Add Movie</strong><span>用户选择 TMDb 结果和 root folder。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>MovieController</strong><span>接收 MovieResource。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>AddMovieService</strong><span>保存 Movie，发布 MovieAddedEvent。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>RefreshMovieCommand</strong><span>后台刷新 metadata 和可选扫描。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="mini-card">
+            <strong>向上依赖</strong>
+            <p>API 和前端读写 Movie。IndexerSearch 使用 Movie 的标题、tags、quality profile 和 translations 生成搜索条件。</p>
+          </div>
+          <div class="mini-card">
+            <strong>向下依赖</strong>
+            <p>依赖 MetadataSource 获取外部数据，依赖 Datastore 持久化，依赖 MediaFiles 绑定实际文件。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="search">
+        <div class="section-header">
+          <h2>搜索与 Release 流水线</h2>
+          <p>
+            搜索模块负责从 indexer 拿到原始 release，解析成 Radarr 能理解的 <code>ReleaseInfo</code>，
+            再交给决策引擎生成可下载或被拒绝的 <code>DownloadDecision</code>。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">IndexerSearch + Indexers + Parser</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>ReleaseController</strong><span>交互搜索、RSS 查询、手动下载、mediaInfo 代理。</span></div>
+              <div class="map-node blue"><strong>ReleaseSearchService</strong><span>创建 search criteria，分发到 indexers。</span></div>
+              <div class="map-node blue"><strong>IndexerFactory</strong><span>筛选启用的 automatic/interactive indexers。</span></div>
+              <div class="map-node alt"><strong>HttpIndexerBase</strong><span>请求 indexer，分页，解析 RSS。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>Newznab/Torznab</strong><span>Prowlarr 等兼容源的主要接入点。</span></div>
+              <div class="map-node"><strong>ReleaseInfo</strong><span>统一 release 数据模型。</span></div>
+              <div class="map-node"><strong>Parser</strong><span>从 title 中解析电影名、质量、语言、版本。</span></div>
+              <div class="map-node red"><strong>RemoteMovie</strong><span>Release + ParsedMovieInfo + Movie 匹配结果。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">interactive search</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node red"><strong>InteractiveSearch UI</strong><span>请求 /api/v3/release?movieId=。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>ReleaseController.GetMovieReleases</strong><span>调用 MovieSearch。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>ReleaseSearchService.Dispatch</strong><span>并发调用 indexer.Fetch。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>DownloadDecisionMaker</strong><span>解析、匹配、拒绝原因、排序。</span></div>
+            </div>
+            <div class="flow-row">
+              <div class="flow-node"><strong>DownloadDecision</strong><span>accepted/rejected + RemoteMovie。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>ReleaseResourceMapper</strong><span>映射到 JSON resource。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>Release table</strong><span>展示质量、语言、audio/subs、拒绝原因。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-grid">
+          <div class="file-link">
+            <b>搜索入口</b>
+            <a href="../../Radarr/src/NzbDrone.Core/IndexerSearch/ReleaseSearchService.cs">NzbDrone.Core/IndexerSearch/ReleaseSearchService.cs</a>
+          </div>
+          <div class="file-link">
+            <b>Release API</b>
+            <a href="../../Radarr/src/Radarr.Api.V3/Indexers/ReleaseController.cs">Radarr.Api.V3/Indexers/ReleaseController.cs</a>
+          </div>
+          <div class="file-link">
+            <b>Release 模型</b>
+            <a href="../../Radarr/src/NzbDrone.Core/Parser/Model/ReleaseInfo.cs">NzbDrone.Core/Parser/Model/ReleaseInfo.cs</a>
+          </div>
+          <div class="file-link">
+            <b>Torznab parser</b>
+            <a href="../../Radarr/src/NzbDrone.Core/Indexers/Torznab/TorznabRssParser.cs">NzbDrone.Core/Indexers/Torznab/TorznabRssParser.cs</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="decision">
+        <div class="section-header">
+          <h2>决策引擎</h2>
+          <p>
+            决策引擎把 release 变成下载候选。它先把标题映射到库中电影，再逐个执行规格检查，最后按质量、Custom Format、delay profile 等排序。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">NzbDrone.Core/DecisionEngine</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>DownloadDecisionMaker</strong><span>主入口，生成 DownloadDecision。</span></div>
+              <div class="map-node"><strong>Specifications</strong><span>质量、语言、大小、监控、历史、延迟等规则。</span></div>
+              <div class="map-node blue"><strong>ParsingService</strong><span>把 ParsedMovieInfo 映射到 Movie。</span></div>
+              <div class="map-node blue"><strong>Aggregation</strong><span>补充 seed、release profile、历史等上下文。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>CustomFormats</strong><span>解析 release 命中的格式并计算分数。</span></div>
+              <div class="map-node alt"><strong>DownloadDecisionComparer</strong><span>候选排序逻辑。</span></div>
+              <div class="map-node red"><strong>DownloadRejection</strong><span>拒绝原因和临时拒绝状态。</span></div>
+              <div class="map-node"><strong>Profiles</strong><span>QualityProfile、DelayProfile、ReleaseProfile。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">decision evaluation</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>ReleaseInfo.Title</strong><span>例如电影名、质量、group。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>Parser.ParseMovieTitle</strong><span>得到 ParsedMovieInfo。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>ParsingService.Map</strong><span>匹配库中 Movie。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>Specifications</strong><span>按 Priority 分组检查。</span></div>
+            </div>
+            <div class="flow-row">
+              <div class="flow-node"><strong>Custom Format Score</strong><span>用于排序和阈值检查。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>DownloadDecision</strong><span>保存 accepted/rejections。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>PrioritizeDecisions</strong><span>每部电影内按 comparer 排序。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>规则类别</th>
+                <th>示例 specification</th>
+                <th>主要问题</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>电影匹配</td>
+                <td><code>Search/MovieSpecification</code></td>
+                <td>这个 release 是否属于当前搜索电影。</td>
+              </tr>
+              <tr>
+                <td>质量和语言</td>
+                <td><code>QualityAllowedByProfile</code>, <code>LanguageSpecification</code></td>
+                <td>候选是否符合 Quality Profile。</td>
+              </tr>
+              <tr>
+                <td>下载安全</td>
+                <td><code>Blocklist</code>, <code>Queue</code>, <code>FreeSpace</code></td>
+                <td>是否已下载、被屏蔽、队列已有、磁盘是否够用。</td>
+              </tr>
+              <tr>
+                <td>RSS 专属</td>
+                <td><code>Delay</code>, <code>MonitoredMovie</code>, <code>Availability</code></td>
+                <td>自动抓取时是否需要等待，电影是否监控，是否已发布。</td>
+              </tr>
+              <tr>
+                <td>偏好排序</td>
+                <td><code>DownloadDecisionComparer</code></td>
+                <td>候选之间谁更好，不一定等同于谁可下载。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="download">
+        <div class="section-header">
+          <h2>下载、队列与导入</h2>
+          <p>
+            手动或自动选择 release 后，Radarr 会把它发送给下载客户端。后续通过队列监控发现完成项，扫描本地文件，
+            做导入决策，最后移动/复制到电影目录并更新 MovieFile。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">Download + Queue + MediaFiles</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>DownloadService</strong><span>选择客户端，调用 Download。</span></div>
+              <div class="map-node"><strong>Download Clients</strong><span>qBittorrent、SABnzbd、Transmission 等。</span></div>
+              <div class="map-node blue"><strong>TrackedDownloads</strong><span>监控客户端队列和完成状态。</span></div>
+              <div class="map-node blue"><strong>CompletedDownloadService</strong><span>处理完成下载。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>MovieImport</strong><span>识别本地电影文件，生成 ImportDecision。</span></div>
+              <div class="map-node alt"><strong>ImportApprovedMovie</strong><span>落库、移动/复制文件、发布导入事件。</span></div>
+              <div class="map-node red"><strong>History</strong><span>记录 grabbed/downloaded/imported/failed。</span></div>
+              <div class="map-node"><strong>Extra Files</strong><span>字幕、nfo、metadata 等附加文件。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">grab to import</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>POST /release</strong><span>用户或自动搜索选择候选。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>DownloadService</strong><span>限速、选择 download client、发送任务。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>MovieGrabbedEvent</strong><span>写历史、通知、队列刷新。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>TrackedDownload</strong><span>持续读取下载客户端状态。</span></div>
+            </div>
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Completed Item</strong><span>客户端显示完成。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>DownloadedMoviesScan</strong><span>扫描输出路径。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>ImportDecision</strong><span>质量、语言、目标路径、拒绝原因。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>MovieFileImportedEvent</strong><span>更新 MovieFile、历史和通知。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="api">
+        <div class="section-header">
+          <h2>API 层</h2>
+          <p>
+            <code>Radarr.Api.V3</code> 是 Core 到前端/外部客户端的边界。Controller 负责资源映射、验证、错误码和 SignalR 广播，
+            业务判断应尽量留在 Core service。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">Radarr.Api.V3 + Radarr.Http</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>RestController</strong><span>通用 GET/POST/PUT/DELETE 行为。</span></div>
+              <div class="map-node"><strong>RestControllerWithSignalR</strong><span>ModelEvent 变更广播。</span></div>
+              <div class="map-node blue"><strong>ProviderControllerBase</strong><span>Provider schema、test、bulk 管理。</span></div>
+              <div class="map-node blue"><strong>Resource Mapper</strong><span>Core model 与 API resource 转换。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node alt"><strong>Movies</strong><span>电影 CRUD、lookup、rename、folder。</span></div>
+              <div class="map-node alt"><strong>Indexers</strong><span>Release、Indexer、ReleasePush。</span></div>
+              <div class="map-node alt"><strong>Queue/History</strong><span>活动、队列动作、历史分页。</span></div>
+              <div class="map-node red"><strong>System</strong><span>任务、状态、日志、更新、备份。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">request lifecycle</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node red"><strong>Browser / API client</strong><span>携带 cookie 或 API key。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>Middleware</strong><span>auth、urlbase、version、errors。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Controller</strong><span>验证 resource，调用 Core service。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>Resource</strong><span>System.Text.Json 返回 camelCase JSON。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="frontend">
+        <div class="section-header">
+          <h2>前端层</h2>
+          <p>
+            前端按业务页面组织，数据层集中在 Redux actions/selectors。许多页面共享 table、modal、provider form 和 filter builder。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">frontend/src</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node red"><strong>App</strong><span>路由、全局主题、初始化。</span></div>
+              <div class="map-node red"><strong>Store</strong><span>Redux actions、reducers、selectors、middlewares。</span></div>
+              <div class="map-node"><strong>Components</strong><span>表格、表单、modal、按钮、布局。</span></div>
+              <div class="map-node"><strong>Utilities</strong><span>过滤器、状态、格式化、请求辅助。</span></div>
+            </div>
+            <div class="map-row cols-4">
+              <div class="map-node blue"><strong>Movie</strong><span>电影列表和详情页。</span></div>
+              <div class="map-node blue"><strong>InteractiveSearch</strong><span>搜索结果表格和下载操作。</span></div>
+              <div class="map-node blue"><strong>Activity</strong><span>Queue、History、Blocklist。</span></div>
+              <div class="map-node alt"><strong>Settings</strong><span>indexers、download clients、profiles、custom formats。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">frontend data flow</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Route Component</strong><span>例如 MovieIndex 或 InteractiveSearch。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>Action Creator</strong><span>发起 fetch/save/remove。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>API Middleware</strong><span>调用 /api/v3 并 dispatch success/failure。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>Selector</strong><span>过滤、排序、拼装页面 props。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="file-grid">
+          <div class="file-link">
+            <b>路由</b>
+            <a href="../../Radarr/frontend/src/App/AppRoutes.tsx">frontend/src/App/AppRoutes.tsx</a>
+          </div>
+          <div class="file-link">
+            <b>Store</b>
+            <a href="../../Radarr/frontend/src/Store/createAppStore.js">frontend/src/Store/createAppStore.js</a>
+          </div>
+          <div class="file-link">
+            <b>Release actions</b>
+            <a href="../../Radarr/frontend/src/Store/Actions/releaseActions.js">frontend/src/Store/Actions/releaseActions.js</a>
+          </div>
+          <div class="file-link">
+            <b>Interactive Search</b>
+            <a href="../../Radarr/frontend/src/InteractiveSearch/InteractiveSearch.tsx">frontend/src/InteractiveSearch/InteractiveSearch.tsx</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="custom-filter">
+        <div class="section-header">
+          <h2>Custom Filter 体系</h2>
+          <p>
+            Custom Filter 是前端列表筛选能力。后端保存 filter 定义，前端根据列表类型取出 filter 并在 selector 中执行。
+            本地 R005 重点扩展了嵌套 AND/OR 条件组。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">R005 nested filter</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>CustomFilterController</strong><span>保存和读取自定义筛选器。</span></div>
+              <div class="map-node"><strong>FilterBuilder</strong><span>编辑条件行和条件组。</span></div>
+              <div class="map-node blue"><strong>filterTree utilities</strong><span>normalize、isFilterGroup、combinator。</span></div>
+              <div class="map-node blue"><strong>createClientSideCollectionSelector</strong><span>递归执行条件树。</span></div>
+            </div>
+            <div class="map-row cols-3">
+              <div class="map-node alt"><strong>Legacy flat filters</strong><span>简单 AND 仍保持兼容。</span></div>
+              <div class="map-node alt"><strong>Nested groups</strong><span>支持 group 内 AND/OR 和子 group。</span></div>
+              <div class="map-node red"><strong>Server-side guard</strong><span>只有 flat AND 可安全下推到后端查询。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">filter execution</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node red"><strong>User selects filter</strong><span>例如交互搜索或队列表格。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node"><strong>findSelectedFilters</strong><span>找到内置或自定义 filter。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>normalizeFilterGroup</strong><span>把旧数组转成根 AND 组。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>doesFilterGroupMatch</strong><span>递归执行 AND/OR。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          R005 的关键原则是兼容旧数据：简单 filter 继续序列化为 flat AND；只有用户使用条件组时，前端才按树结构执行。
+        </div>
+      </section>
+
+      <section class="section" id="prowlarr-media">
+        <div class="section-header">
+          <h2>Prowlarr 媒体信息接入专题</h2>
+          <p>
+            本地 R001 把 Prowlarr 返回的音轨语言、字幕语言、每语言音频规格和 MediaInfo enrich 状态接入 Radarr。
+            这条链路横跨 Newznab/Torznab parser、ReleaseResource、交互式搜索 UI 和自动搜索等待逻辑。
+          </p>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">模块组织图 <span class="diagram-label">R001 downstream media fields</span></div>
+          <div class="module-map">
+            <div class="map-row cols-4">
+              <div class="map-node"><strong>Torznab/Newznab attrs</strong><span><code>audio</code>, <code>subs</code>, mediaInfo progress。</span></div>
+              <div class="map-node blue"><strong>ReleaseInfo</strong><span><code>Subs</code>, <code>AudioInfo</code>, <code>MediaInfoStatus</code>。</span></div>
+              <div class="map-node blue"><strong>ReleaseResource</strong><span>/api/v3/release JSON 输出。</span></div>
+              <div class="map-node red"><strong>InteractiveSearch</strong><span>Audio Info、Subtitle Languages、progress alert。</span></div>
+            </div>
+            <div class="map-row cols-3">
+              <div class="map-node alt"><strong>/release/mediaInfo</strong><span>Radarr 代理到 Prowlarr 的 per-row enrich。</span></div>
+              <div class="map-node alt"><strong>releaseActions.js</strong><span>前端队列请求附加数据并合并行状态。</span></div>
+              <div class="map-node"><strong>Automatic Search Wait</strong><span>非交互搜索等待 pending mediaInfo 再决策。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diagram-block">
+          <div class="diagram-title">运行流程图 <span class="diagram-label">Prowlarr mediaInfo enrichment</span></div>
+          <div class="flow">
+            <div class="flow-row four">
+              <div class="flow-node"><strong>Prowlarr search result</strong><span>先返回基础 release 和 pending 状态。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Radarr Torznab parser</strong><span>解析 audio/subs/progress attrs。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>Interactive Search UI</strong><span>显示行级 loading 和整组进度。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node alt"><strong>POST /release/mediaInfo</strong><span>触发 Prowlarr 单行 enrich。</span></div>
+            </div>
+            <div class="flow-row">
+              <div class="flow-node"><strong>Prowlarr response</strong><span>返回该行 audio/subs/status/progress。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node blue"><strong>Radarr cache update</strong><span>更新 remoteMovie cache。</span></div>
+              <div class="arrow">→</div>
+              <div class="flow-node red"><strong>UI merge</strong><span>更新完整 release list，不主动改变当前排序快照。</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>后端承载</th>
+                <th>前端用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>audioInfo</code></td>
+                <td><code>ReleaseInfo.AudioInfo</code> 和 <code>ReleaseResource.AudioInfo</code></td>
+                <td>显示语言和规格，例如 English: TrueHD Atmos、Chinese: DDP 5.1。</td>
+              </tr>
+              <tr>
+                <td><code>subs</code></td>
+                <td><code>ReleaseInfo.Subs</code> 和 <code>ReleaseResource.Subs</code></td>
+                <td>显示字幕语言，可参与搜索结果筛选和排序。</td>
+              </tr>
+              <tr>
+                <td><code>mediaInfoStatus</code></td>
+                <td><code>pending</code>, <code>available</code>, <code>failed</code>, <code>unavailable</code></td>
+                <td>控制单行 loading 是否继续显示。</td>
+              </tr>
+              <tr>
+                <td><code>mediaInfoProgress*</code></td>
+                <td>整组搜索进度，completed/total/status。</td>
+                <td>控制交互式搜索顶部的 additional data 进度提示。</td>
+              </tr>
+              <tr>
+                <td><code>prowlarrIndexerId</code></td>
+                <td>Radarr indexer id 和 Prowlarr 内部 indexer id 的桥。</td>
+                <td>让 Radarr 能调用 Prowlarr 的 per-row mediaInfo 端点。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="developer-index">
+        <div class="section-header">
+          <h2>开发者索引</h2>
+          <p>
+            这一节不是模块介绍，而是日常改代码时的入口地图。顺着这些路径能快速从需求定位到应该修改的层。
+          </p>
+        </div>
+
+        <div class="three-col">
+          <div class="mini-card">
+            <strong>追踪一个 API 请求</strong>
+            <p>从 <code>Radarr.Api.V3/*Controller</code> 找 controller，再看 resource mapper，最后进 Core service。</p>
+          </div>
+          <div class="mini-card">
+            <strong>新增 Release 字段</strong>
+            <p>改 <code>ReleaseInfo</code>、RSS parser、<code>ReleaseResource</code>、前端 typings/actions/table/filter。</p>
+          </div>
+          <div class="mini-card">
+            <strong>新增 Indexer</strong>
+            <p>实现 <code>IIndexer</code> 或继承 <code>HttpIndexerBase</code>，补 request generator、parser、settings、测试。</p>
+          </div>
+          <div class="mini-card">
+            <strong>新增下载客户端</strong>
+            <p>看 <code>Download/Clients</code> 同类实现，接入 provider schema、连接测试和 Download 方法。</p>
+          </div>
+          <div class="mini-card">
+            <strong>新增前端表格列</strong>
+            <p>改页面 columns、row component、store sort/filter predicates、translation。</p>
+          </div>
+          <div class="mini-card">
+            <strong>新增 Custom Filter 字段</strong>
+            <p>为对应 collection 补 filterBuilderProps、filterPredicates，必要时补 API resource 字段。</p>
+          </div>
+        </div>
+
+        <div class="module-detail">
+          <h3>重点代码入口</h3>
+          <div class="file-grid">
+            <div class="file-link"><b>启动</b><a href="../../Radarr/src/NzbDrone.Host/Bootstrap.cs">src/NzbDrone.Host/Bootstrap.cs</a></div>
+            <div class="file-link"><b>HTTP 管线</b><a href="../../Radarr/src/NzbDrone.Host/Startup.cs">src/NzbDrone.Host/Startup.cs</a></div>
+            <div class="file-link"><b>数据映射</b><a href="../../Radarr/src/NzbDrone.Core/Datastore/TableMapping.cs">src/NzbDrone.Core/Datastore/TableMapping.cs</a></div>
+            <div class="file-link"><b>Provider 工厂</b><a href="../../Radarr/src/NzbDrone.Core/ThingiProvider/ProviderFactory.cs">src/NzbDrone.Core/ThingiProvider/ProviderFactory.cs</a></div>
+            <div class="file-link"><b>搜索</b><a href="../../Radarr/src/NzbDrone.Core/IndexerSearch/ReleaseSearchService.cs">src/NzbDrone.Core/IndexerSearch/ReleaseSearchService.cs</a></div>
+            <div class="file-link"><b>决策</b><a href="../../Radarr/src/NzbDrone.Core/DecisionEngine/DownloadDecisionMaker.cs">src/NzbDrone.Core/DecisionEngine/DownloadDecisionMaker.cs</a></div>
+            <div class="file-link"><b>下载</b><a href="../../Radarr/src/NzbDrone.Core/Download/DownloadService.cs">src/NzbDrone.Core/Download/DownloadService.cs</a></div>
+            <div class="file-link"><b>导入</b><a href="../../Radarr/src/NzbDrone.Core/MediaFiles/MovieImport/ImportApprovedMovie.cs">src/NzbDrone.Core/MediaFiles/MovieImport/ImportApprovedMovie.cs</a></div>
+            <div class="file-link"><b>前端路由</b><a href="../../Radarr/frontend/src/App/AppRoutes.tsx">frontend/src/App/AppRoutes.tsx</a></div>
+            <div class="file-link"><b>前端 Release 数据流</b><a href="../../Radarr/frontend/src/Store/Actions/releaseActions.js">frontend/src/Store/Actions/releaseActions.js</a></div>
+            <div class="file-link"><b>交互搜索页面</b><a href="../../Radarr/frontend/src/InteractiveSearch/InteractiveSearch.tsx">frontend/src/InteractiveSearch/InteractiveSearch.tsx</a></div>
+            <div class="file-link"><b>嵌套过滤执行</b><a href="../../Radarr/frontend/src/Store/Selectors/createClientSideCollectionSelector.js">frontend/src/Store/Selectors/createClientSideCollectionSelector.js</a></div>
+          </div>
+        </div>
+
+        <a class="top-link" href="#top">返回顶部</a>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

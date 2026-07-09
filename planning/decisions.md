@@ -85,3 +85,30 @@ Automatic searches in Radarr/Sonarr must preserve their decision semantics. Wind
 - Update Radarr/Sonarr downstream behavior so their backends own Prowlarr handles, keep only a small active window, renew while waiting, cancel on manual-search abandonment/session expiry, and continue automatic-search waiting until required candidates are completed or terminal.
 - Ensure successful MediaInfo/Detail responses still populate cache so later requests for the same torrent can return immediately without queueing.
 - Ensure progress counts are based on the active business-party search/session scope, not every possible result returned by the original search.
+
+## D003 - Apply Chinese audio/subtitle preference in Radarr release decisions
+
+Date: 2026-07-09
+Related Requirement: R001
+
+### Decision
+
+Radarr release decisions should enforce the user's Chinese accessibility preference after R001 media fields are available:
+
+- A release must have Chinese subtitles or Chinese audio. If a non-interactive decision is still waiting on per-row MediaInfo, Radarr treats that as temporary and waits/retries instead of permanently rejecting it. Interactive search rows avoid a pending-time rejection because their MediaInfo is enriched in place after the initial decision list is rendered.
+- When Chinese audio exists, Radarr selects the audio track to score from the per-language audio specifications. Chinese DDP 5.1 or better is preferred directly.
+- If Chinese audio is below DDP 5.1, Chinese subtitles are available, the movie original language is not Chinese, and the original-language track is preferable under the audio-spec comparison rules, Radarr scores the original-language track instead.
+- If Chinese and original-language tracks are both below DDP 5.1, Radarr scores Chinese only when the two specs are equivalent; otherwise it scores the original-language track when Chinese subtitles make that usable.
+- The selected track score adds independent bonuses for Atmos object audio, 5.1/7.1 channels, and exactly one codec-class bonus: lossless TrueHD/DTS-HD MA-style audio or lossy DDP/DD-style audio.
+
+The audio preference score participates in Radarr's release ordering after quality and Custom Format score, before protocol/indexer/seed/age/size tie-breakers. The release API exposes the selected preferred audio track, audio preference score, and Chinese accessibility boolean for downstream UI/state use.
+
+### Reason
+
+R001 now gives Radarr the per-language audio/subtitle metadata needed to express the user's actual viewing preference: Chinese accessibility is mandatory, but the best playback track may be Chinese dubbing or the original-language track depending on the Chinese dub quality and subtitle availability.
+
+### Consequences
+
+- Radarr automatic search can use R001 MediaInfo enrichment for Chinese accessibility and audio-spec ranking.
+- Interactive search receives the same calculated fields when a row's MediaInfo is filled.
+- This is currently a hard-coded personal preference in the branch, not a configurable settings page.

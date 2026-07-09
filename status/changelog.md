@@ -45,3 +45,5 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Updated Prowlarr/Radarr additional-data progress totals to use the full displayed result set, so cached rows count as already completed, for example `35/60` instead of `0/25`.
 - Moved Radarr interactive-search additional-data progress into the modal footer so it remains visible while the result table scrolls.
 - Refined Prowlarr Audio/Subtitle sorting so completed-but-empty media rows and pending/not-yet-requested media rows are kept in separate sort groups instead of being mixed together as the same empty value.
+- Added Radarr R006 backend release selection controls: Release Filter Profiles, Audio Language Mappings, Audio Score Profiles, Audio Language Preferences, and Custom Format Mutex Groups can now drive Quality Profile decisions and automatic release ordering.
+- Added Radarr interactive-search selected-audio and audio-score output, including score breakdown popovers and custom filter/sort fields for the selected audio result.

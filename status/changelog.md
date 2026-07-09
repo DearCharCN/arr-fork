@@ -56,3 +56,5 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Added a Radarr Filters settings page for standalone Release Filter Profile create/edit/delete, including grouped backend filter conditions and Settings sidebar/homepage navigation.
 - Refined the Radarr Release Filter Profile editor so the Filter section uses the same compact nested row editor as Custom Filter, with `and`/`or` group rows, add-condition/add-group icons, inline field/operator/value controls, and sibling condition insertion.
 - Removed the group-header add-condition button from Radarr Custom Filter and Release Filter editors, so adding rows is done through condition-row `+` controls while group headers only add or remove groups.
+- Fixed Radarr R006 Custom Format Mutex Group scoring in movie search paths, so releases matching multiple custom formats in the same active Quality Profile mutex group only contribute the highest score instead of all scores.
+- Fixed Prowlarr M-Team audio parsing so DTS-UHD/DTS:X P2, Audio Vivid/AV3A, and 5.1.4 height-channel layouts are preserved instead of collapsed into generic `DTS 10ch` style labels.

@@ -55,3 +55,4 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Updated Radarr Audio Language Preference entries so Language Tag is selected from the language list plus the virtual `Origin` tag instead of typed as free text.
 - Added a Radarr Filters settings page for standalone Release Filter Profile create/edit/delete, including grouped backend filter conditions and Settings sidebar/homepage navigation.
 - Refined the Radarr Release Filter Profile editor so the Filter section uses the same compact nested row editor as Custom Filter, with `and`/`or` group rows, add-condition/add-group icons, inline field/operator/value controls, and sibling condition insertion.
+- Removed the group-header add-condition button from Radarr Custom Filter and Release Filter editors, so adding rows is done through condition-row `+` controls while group headers only add or remove groups.

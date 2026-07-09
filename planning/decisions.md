@@ -86,29 +86,28 @@ Automatic searches in Radarr/Sonarr must preserve their decision semantics. Wind
 - Ensure successful MediaInfo/Detail responses still populate cache so later requests for the same torrent can return immediately without queueing.
 - Ensure progress counts are based on the active business-party search/session scope, not every possible result returned by the original search.
 
-## D003 - Apply Chinese audio/subtitle preference in Radarr release decisions
+## D003 - Supersede hard-coded Chinese accessibility rejection with R006 configuration
 
 Date: 2026-07-09
-Related Requirement: R001
+Related Requirement: R001, R006
 
 ### Decision
 
-Radarr release decisions should enforce the user's Chinese accessibility preference after R001 media fields are available:
+The earlier hard-coded Radarr Chinese accessibility rejection has been superseded by R006 configurable Release Filter Profiles. Radarr should no longer globally reject releases merely because they have neither Chinese audio nor Chinese subtitles.
 
-- A release must have Chinese subtitles or Chinese audio. If a non-interactive decision is still waiting on per-row MediaInfo, Radarr treats that as temporary and waits/retries instead of permanently rejecting it. Interactive search rows avoid a pending-time rejection because their MediaInfo is enriched in place after the initial decision list is rendered.
-- When Chinese audio exists, Radarr selects the audio track to score from the per-language audio specifications. Chinese DDP 5.1 or better is preferred directly.
-- If Chinese audio is below DDP 5.1, Chinese subtitles are available, the movie original language is not Chinese, and the original-language track is preferable under the audio-spec comparison rules, Radarr scores the original-language track instead.
-- If Chinese and original-language tracks are both below DDP 5.1, Radarr scores Chinese only when the two specs are equivalent; otherwise it scores the original-language track when Chinese subtitles make that usable.
-- The selected track score adds independent bonuses for Atmos object audio, 5.1/7.1 channels, and exactly one codec-class bonus: lossless TrueHD/DTS-HD MA-style audio or lossy DDP/DD-style audio.
+Chinese accessibility remains available as configurable data:
 
-The audio preference score participates in Radarr's release ordering after quality and Custom Format score, before protocol/indexer/seed/age/size tie-breakers. The release API exposes the selected preferred audio track, audio preference score, and Chinese accessibility boolean for downstream UI/state use.
+- Release Filter Profiles can use MediaInfo-backed fields such as audio language, subtitle language, selected audio, selected-audio score, and `hasChineseAudioOrSubtitle`.
+- Quality Profiles decide whether a Release Filter Profile applies by binding `ReleaseFilterProfileId`.
+- If no Release Filter Profile is bound, Radarr should not reject or wait for releases solely due to Chinese audio/subtitle availability.
+- The Chinese media preference evaluator may still provide fallback selected-audio scoring/display fields when no configurable audio preference service is available, but it must not act as an independent global download-decision specification.
 
 ### Reason
 
-R001 now gives Radarr the per-language audio/subtitle metadata needed to express the user's actual viewing preference: Chinese accessibility is mandatory, but the best playback track may be Chinese dubbing or the original-language track depending on the Chinese dub quality and subtitle availability.
+R006 moved release filtering and audio preference behavior into user-visible Quality Profile bindings. A standalone hard-coded Chinese rule could reject releases even when the user had only created a filter profile and had not attached it to the movie's Quality Profile, which made the configured filter model misleading.
 
 ### Consequences
 
-- Radarr automatic search can use R001 MediaInfo enrichment for Chinese accessibility and audio-spec ranking.
-- Interactive search receives the same calculated fields when a row's MediaInfo is filled.
-- This is currently a hard-coded personal preference in the branch, not a configurable settings page.
+- Chinese access requirements must be represented as Release Filter Profile conditions if the user wants them enforced.
+- Interactive and automatic searches should only wait on MediaInfo for Chinese access decisions when the active Quality Profile's bound Release Filter Profile needs those MediaInfo fields.
+- Existing release API fields such as `preferredAudioInfo`, `audioPreferenceScore`, and `hasChineseAudioOrSubtitle` can remain available for display, sorting, and future configuration.

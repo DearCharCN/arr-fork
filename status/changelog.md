@@ -51,3 +51,4 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Moved Radarr Custom Format Mutex Groups into the Custom Formats settings page with card-style add/edit/delete controls matching the existing Custom Format cards.
 - Refined Radarr release-scoring editors so Audio Language Mapping aliases use editable input rows, Audio Score mutex groups use card-style controls, and Audio Score rules choose mutex groups from a dropdown.
 - Added the Audio Formats entry to Radarr's left Settings sidebar menu.
+- Refined the Radarr Audio Formats and Custom Formats configuration UI again so audio configuration lists use cards, Audio Score Mutex Groups open a dedicated editor with rule-card selection, and Custom Format Mutex Group custom-format selection uses cards instead of a checkbox list.

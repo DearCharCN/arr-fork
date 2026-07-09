@@ -52,3 +52,5 @@ Do not record draft requirements, planned work, routine AI activity, command run
 - Refined Radarr release-scoring editors so Audio Language Mapping aliases use editable input rows, Audio Score mutex groups use card-style controls, and Audio Score rules choose mutex groups from a dropdown.
 - Added the Audio Formats entry to Radarr's left Settings sidebar menu.
 - Refined the Radarr Audio Formats and Custom Formats configuration UI again so audio configuration lists use cards, Audio Score Mutex Groups open a dedicated editor with rule-card selection, and Custom Format Mutex Group custom-format selection uses cards instead of a checkbox list.
+- Updated Radarr Audio Language Preference entries so Language Tag is selected from the language list plus the virtual `Origin` tag instead of typed as free text.
+- Added a Radarr Filters settings page for standalone Release Filter Profile create/edit/delete, including grouped backend filter conditions and Settings sidebar/homepage navigation.
